@@ -41,3 +41,13 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Large media files (stored in R2)
+/Assets
+*.wav
+*.mp3
+*.flac
+*.zip
+*.rar
+dev.db
+error_log.txt
