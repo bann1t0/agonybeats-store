@@ -1,18 +1,16 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import styles from "../checkout.module.css";
 import FallingComets from "@/components/FallingComets";
 
-export default function SuccessPage() {
+function SuccessContent() {
     const searchParams = useSearchParams();
     const sessionId = searchParams.get("session_id");
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Optional: Fetch session details from Stripe to show order info
-        // For now, just show success message
         setTimeout(() => setLoading(false), 1000);
     }, [sessionId]);
 
@@ -69,5 +67,19 @@ export default function SuccessPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className={styles.container}>
+                <div style={{ textAlign: "center", marginTop: "4rem", color: "white" }}>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        }>
+            <SuccessContent />
+        </Suspense>
     );
 }
