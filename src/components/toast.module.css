@@ -1,0 +1,105 @@
+.toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+    pointer-events: none;
+    /* Allow clicking through empty space */
+}
+
+.toast {
+    position: relative;
+    padding: 1rem 1.5rem;
+    min-width: 300px;
+    background: rgba(15, 15, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    color: #fff;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    transform: translateX(100%);
+    animation: slideIn 0.4s ease-out forwards;
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+.toast.hiding {
+    animation: slideOut 0.4s ease-in forwards;
+}
+
+/* Types */
+.success {
+    border-left: 4px solid var(--neon-blue);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(14, 165, 233, 0.1);
+}
+
+.error {
+    border-left: 4px solid #ef4444;
+    /* Red */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(239, 68, 68, 0.1);
+}
+
+.info {
+    border-left: 4px solid var(--neon-purple);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(217, 70, 239, 0.1);
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+}
+
+/* Progress Bar for Auto Dismiss */
+.progressBar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+    width: 100%;
+    animation: progress 3s linear forwards;
+}
+
+@keyframes progress {
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0%;
+    }
+}
+
+/* Icons */
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

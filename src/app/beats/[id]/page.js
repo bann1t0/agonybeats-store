@@ -1,0 +1,343 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useParams, useRouter, useSearchParams } from "next/navigation"; // Correct for App Router
+import { useSession } from "next-auth/react";
+import { useCart } from "@/context/CartContext";
+import styles from "./beat-details.module.css";
+
+// LICENSES removed in favor of dynamic beat.licenses
+
+function ArrowLeftIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+    );
+}
+
+function DownloadIcon() {
+    return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
+}
+
+function LockIcon() {
+    return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>;
+}
+
+function StarsIcon() {
+    return <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+}
+
+import { useToast } from "@/context/ToastContext";
+import { usePlayer } from "@/context/PlayerContext"; // Add import
+
+export default function BeatDetailsPage() {
+    const params = useParams();
+    const { id } = params;
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { data: session } = useSession();
+    const { addToCart } = useCart();
+    const { showToast } = useToast();
+    const { playTrack, currentBeat, isPlaying } = usePlayer(); // Get player hook
+
+    const [beat, setBeat] = useState(null);
+    const [similarBeats, setSimilarBeats] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedLicense, setSelectedLicense] = useState(null);
+
+    const displayLicenses = React.useMemo(() => {
+        if (!beat) return [];
+        if (beat.licenses && beat.licenses.length > 0) {
+            return beat.licenses.map(bl => ({
+                id: bl.licenseId,
+                title: bl.license.name,
+                price: bl.price !== null ? bl.price : bl.license.defaultPrice,
+                type: bl.license.name.toLowerCase().replace(/\s+/g, '-'),
+                features: bl.license.features,
+                isRecommended: bl.license.isRecommended
+            })).sort((a, b) => a.price - b.price);
+        }
+        // Fallback for legacy beats without attached licenses
+        return [{ title: "Basic Lease", price: beat.price || 19.99, type: "basic" }];
+    }, [beat]);
+
+    // Pre-select license from URL or default
+    useEffect(() => {
+        if (!beat) return;
+        const licenseType = searchParams.get("license");
+        if (licenseType) {
+            const found = displayLicenses.find(l => l.type === licenseType || l.id === licenseType);
+            if (found) setSelectedLicense(found);
+        }
+    }, [searchParams, beat, displayLicenses]);
+
+    useEffect(() => {
+        if (!id) return;
+        async function fetchBeat() {
+            try {
+                // Dummy fallback
+                // Dummy fallback removed
+                if (id == 1) {
+                    // Pass through to fetch, or just return if we want to kill it completely.
+                    // Let's assume id 1 might be real now, or if it was dummy only, we just rely on fetch.
+                }
+
+                const res = await fetch("/api/beats");
+                if (res.ok) {
+                    const data = await res.json();
+                    const found = data.find(b => b.id == id);
+                    if (found) {
+                        setBeat(found);
+
+                        // Find similar beats
+                        if (found.genre) {
+                            const similar = data.filter(b => b.genre === found.genre && b.id !== found.id).slice(0, 4);
+                            setSimilarBeats(similar);
+                        } else {
+                            const similar = data.filter(b => b.id !== found.id).slice(0, 4);
+                            setSimilarBeats(similar);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load beat", e);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchBeat();
+    }, [id]);
+
+    const handleAddToCart = () => {
+        if (!beat || !selectedLicense) {
+            showToast("Please select a license first.", "info");
+            return;
+        }
+
+        const itemToAdd = {
+            ...beat,
+            price: selectedLicense.price,
+            licenseTitle: selectedLicense.title,
+            licenseType: selectedLicense.type,
+            cartId: `${beat.id}-${selectedLicense.type}`
+        };
+
+        addToCart(itemToAdd);
+        // Toast is handled in addToCart now, but we can rely on that.
+    };
+
+    const handleFreeDownload = async () => {
+        if (!session) {
+            showToast("Please login to access free downloads.", "error");
+            // Optionally redirect to login
+            // router.push("/login");
+            return;
+        }
+
+        try {
+            showToast("Starting download...", "info"); // Immediate feedback
+            const res = await fetch(`/api/beats/${beat.id}/download`, {
+                method: "POST",
+            });
+            const data = await res.json();
+
+            if (res.ok && data.downloadUrl) {
+                // Trigger download
+                const link = document.createElement('a');
+                link.href = data.downloadUrl;
+                link.download = `${beat.title}.mp3`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast("Download started! Enjoy the beat.", "success");
+            } else {
+                showToast("Error starting download: " + data.error, "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Something went wrong with the download.", "error");
+        }
+    };
+
+    if (loading) return <div className={styles.page}><p style={{ color: 'white', marginTop: '4rem' }}>Loading...</p></div>;
+    if (!beat) return <div className={styles.page}><p style={{ color: 'white', marginTop: '4rem' }}>Beat not found.</p></div>;
+
+    const isCurrentPlaying = currentBeat && currentBeat.id === beat.id && isPlaying;
+
+    return (
+        <div className={styles.page}>
+            <div className={styles.header}>
+                <div style={{ paddingLeft: "2rem", width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+                    <Link href="/" className={styles.backLink}>
+                        <ArrowLeftIcon />
+                        BACK TO CATALOGUE
+                    </Link>
+                </div>
+            </div>
+
+            <main className={styles.main}>
+                <div className={styles.beatContainer}>
+                    {/* Left Column: Image & Info */}
+                    <div className={styles.leftColumn}>
+                        <div className={styles.imageAndPlayWrapper} style={{ position: 'relative', overflow: 'hidden', borderRadius: '4px' }}>
+                            <img src={beat.cover} alt={beat.title} className={styles.coverImage} style={{ display: 'block', width: '100%' }} />
+
+                            {/* Play Overlay */}
+                            <div
+                                onClick={() => playTrack(beat)}
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    background: 'rgba(0,0,0,0.3)',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    cursor: 'pointer',
+                                    opacity: isCurrentPlaying ? 1 : 0.8,
+                                    transition: 'opacity 0.2s'
+                                }}
+                                className="playOverlay"
+                            >
+                                <div style={{
+                                    width: '60px',
+                                    height: '60px',
+                                    borderRadius: '50%',
+                                    background: 'rgba(0,0,0,0.6)',
+                                    border: '2px solid var(--neon-blue)',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    color: 'white',
+                                    boxShadow: isCurrentPlaying ? '0 0 20px var(--neon-blue)' : 'none'
+                                }}>
+                                    {isCurrentPlaying ? (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className={styles.beatInfo}>
+                            <h1 className={styles.title}>{beat.title}</h1>
+                            <div className={styles.meta}>
+                                <span className={styles.metaItem}>{beat.bpm} BPM</span>
+                                <span className={styles.metaItem}>{beat.key}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: License Selector */}
+                    <div className={styles.rightColumn}>
+
+                        {!beat.stems && (
+                            <div style={{
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                border: '1px solid #ef4444',
+                                color: '#fca5a5',
+                                padding: '1rem',
+                                borderRadius: '8px',
+                                marginBottom: '1.5rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                fontSize: '0.9rem'
+                            }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                <strong>Note:</strong> Track Stems are not currently available for this beat.
+                            </div>
+                        )}
+
+                        <h2 className={styles.licenseTitle}>Select a License</h2>
+
+                        {displayLicenses.map((lic) => (
+                            <div
+                                key={lic.id || lic.type}
+                                className={`${styles.licenseOption} ${selectedLicense?.type === lic.type ? styles.selectedLicense : ''} ${(lic.title.toLowerCase().includes('exclusive') || Number(lic.price) > 99) ? styles.exclusiveOpt : ''}`}
+                                style={lic.isRecommended ? {
+                                    boxShadow: '0 0 15px rgba(217, 70, 239, 0.4)',
+                                    border: '1px solid var(--neon-purple)',
+                                    position: 'relative',
+                                    overflow: 'visible' // Allow badge to stick out if needed
+                                } : {}}
+                                onClick={() => setSelectedLicense(lic)}
+                            >
+                                {lic.isRecommended && (
+                                    <span style={{
+                                        position: 'absolute',
+                                        top: '-10px',
+                                        right: '10px',
+                                        background: 'var(--neon-purple)',
+                                        color: 'white',
+                                        fontSize: '0.6rem',
+                                        fontWeight: 'bold',
+                                        padding: '2px 6px',
+                                        borderRadius: '4px',
+                                        textTransform: 'uppercase',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                                    }}>Best Value</span>
+                                )}
+                                <span className={styles.licName}>{lic.title}</span>
+                                <span className={styles.licPrice}>${lic.price != null ? Number(lic.price).toFixed(2) : '0.00'}</span>
+                            </div>
+                        ))}
+
+                        <button
+                            className={`${styles.addToCartBtn} ${!selectedLicense ? styles.disabledBtn : ''}`}
+                            disabled={!selectedLicense}
+                            onClick={handleAddToCart}
+                        >
+                            {selectedLicense ? `ADD TO CART - $${selectedLicense.price}` : "SELECT A LICENSE"}
+                        </button>
+
+                        {selectedLicense && !beat.stems && selectedLicense.features && selectedLicense.features.toLowerCase().includes('stem') && (
+                            <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
+                                Warning: This license includes Stems but they are not uploaded.
+                            </p>
+                        )}
+
+                        <p style={{ color: '#666', fontSize: '0.8rem', marginTop: '1rem', textAlign: 'center' }}>
+                            Secure checkout via Stripe/PayPal. Instant download after purchase.
+                        </p>
+
+                        <div className={styles.freeDlSection}>
+                            {session ? (
+                                <button onClick={handleFreeDownload} className={styles.freeDlBtn}>
+                                    <DownloadIcon /> FREE DOWNLOAD
+                                </button>
+                            ) : (
+                                <Link href="/login" className={styles.loginDlBtn}>
+                                    <LockIcon /> LOGIN FOR FREE DOWNLOAD
+                                </Link>
+                            )}
+                            <p className={styles.gdprNote}>MP3 Tagged • By downloading, you agree to receive updates.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {similarBeats.length > 0 && (
+                    <div className={styles.similarSection}>
+                        <h3 className={styles.similarTitle}>Similar Vibes <StarsIcon /></h3>
+                        <div className={styles.similarGrid}>
+                            {similarBeats.map(sim => (
+                                <Link key={sim.id} href={`/beats/${sim.id}`} className={styles.similarCard}>
+                                    <img src={sim.cover} alt={sim.title} className={styles.similarCover} />
+                                    <div className={styles.similarInfo}>
+                                        <h4>{sim.title}</h4>
+                                        <span>{sim.bpm} BPM • {sim.key}</span>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+}

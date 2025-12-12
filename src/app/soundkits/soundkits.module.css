@@ -1,0 +1,390 @@
+.container {
+    padding: 8rem 2rem 6rem 2rem;
+    min-height: 100vh;
+    /* Deep cosmic background with stars effect */
+    background:
+        radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.4), transparent 50%),
+        radial-gradient(circle at 85% 30%, rgba(14, 165, 233, 0.3), transparent 50%),
+        url("https://www.transparenttextures.com/patterns/stardust.png"),
+        /* Subtle texture */
+        linear-gradient(to bottom, #020617, #0f172a, #020617);
+    color: #fff;
+    font-family: sans-serif;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Floating "stars" or particles could be added via ::before but let's stick to gradient */
+
+.title {
+    font-family: var(--font-orbitron);
+    font-size: 4.5rem;
+    text-align: center;
+    margin-bottom: 5rem;
+    color: #fff;
+    /* Reduced neon glow */
+    text-shadow:
+        0 0 5px #fff,
+        0 0 10px #e879f9,
+        0 0 20px #e879f9,
+        0 0 40px #d946ef;
+    letter-spacing: -2px;
+    /* Tighter kerning */
+    text-transform: uppercase;
+    animation: neonPulse 2s infinite alternate;
+}
+
+@keyframes neonPulse {
+    from {
+        text-shadow:
+            0 0 5px #fff,
+            0 0 10px #e879f9,
+            0 0 20px #e879f9;
+    }
+
+    to {
+        text-shadow:
+            0 0 2px #fff,
+            0 0 5px #e879f9,
+            0 0 15px #e879f9,
+            0 0 30px #d946ef;
+    }
+
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 4rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+.detailsLink {
+    display: inline-block;
+    margin-top: 1rem;
+    color: #e879f9;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.detailsLink:hover {
+    color: #fff;
+    border-bottom-color: #fff;
+}
+
+/* Card Styling */
+.card {
+    background: rgba(10, 10, 15, 0.7);
+    border: 2px solid #d946ef;
+    /* Hot Pink Border/Neon */
+    position: relative;
+    backdrop-filter: blur(12px);
+    box-shadow:
+        0 0 10px rgba(217, 70, 239, 0.4),
+        inset 0 0 20px rgba(217, 70, 239, 0.1);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 8px;
+    /* Slightly squarer for tech look */
+    z-index: 1;
+}
+
+.cardActive {
+    border-color: #0ea5e9;
+    /* Blue when active */
+    box-shadow:
+        0 0 30px rgba(14, 165, 233, 0.8),
+        inset 0 0 20px rgba(14, 165, 233, 0.2);
+    transform: scale(1.03);
+    z-index: 10;
+}
+
+.card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: #0ea5e9;
+    /* Hover turns to Cyan */
+    box-shadow:
+        0 0 30px rgba(14, 165, 233, 0.6),
+        0 0 60px rgba(14, 165, 233, 0.3);
+}
+
+/* Cover & Play Overlay */
+.coverWrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    cursor: pointer;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    filter: brightness(0.9) contrast(1.1);
+}
+
+.card:hover .cover {
+    transform: scale(1.1);
+    filter: brightness(1.1);
+}
+
+.playOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: opacity 0.3s;
+    backdrop-filter: blur(2px);
+}
+
+.card:hover .playOverlay,
+.playOverlay:hover,
+.overlayVisible {
+    opacity: 1;
+}
+
+/* Info Section */
+.info {
+    padding: 1.5rem 2rem;
+    flex: 1;
+}
+
+.kitTitle {
+    font-family: var(--font-orbitron);
+    font-size: 1.6rem;
+    margin-bottom: 0.8rem;
+    color: #fff;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.desc {
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    /* Slate 300 */
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    /* Clean sans */
+    font-weight: 300;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+/* Action Section */
+.actions {
+    padding: 0 2rem 2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    /* Ensure space between */
+}
+
+.priceTag {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #d946ef;
+    /* Pink */
+    font-family: var(--font-orbitron);
+    text-shadow: 0 0 15px rgba(217, 70, 239, 0.6);
+}
+
+.cartBtn {
+    padding: 1rem 2rem;
+    background: transparent;
+    border: 2px solid #0ea5e9;
+    color: #0ea5e9;
+    font-weight: 900;
+    font-family: var(--font-orbitron);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 2px;
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
+}
+
+.cartBtn:hover {
+    background: #0ea5e9;
+    color: #000;
+    box-shadow:
+        0 0 30px rgba(14, 165, 233, 0.8),
+        0 0 50px rgba(14, 165, 233, 0.5);
+    transform: scale(1.05) rotate(-1deg);
+}
+
+/* --- DETAILS PAGE STYLES --- */
+.detailsHero {
+    position: relative;
+    width: 100%;
+    min-height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    overflow: hidden;
+}
+
+.blurredBg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(40px) brightness(0.4);
+    z-index: 0;
+}
+
+.detailsContent {
+    /* Vertical Layout Changes */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 3rem;
+
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+.detailsLeft {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.detailsCover {
+    width: 100%;
+    max-width: 400px;
+    /* Slightly smaller to fit better vertically */
+    border-radius: 12px;
+    box-shadow: 0 0 40px rgba(14, 165, 233, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.5s;
+}
+
+.detailsCover:hover {
+    transform: scale(1.02);
+}
+
+.detailsRight {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Center content vertically */
+    width: 100%;
+}
+
+.detailsTitle {
+    font-family: var(--font-orbitron);
+    font-size: 3.5rem;
+    /* Larger title */
+    color: #fff;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+}
+
+.detailsDesc {
+    font-size: 1.1rem;
+    color: #ccc;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+    white-space: pre-wrap;
+    max-width: 600px;
+    /* Constrain reading width */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.detailsActions {
+    margin-top: 1rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.detailsPrice {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #d946ef;
+    font-family: var(--font-orbitron);
+    margin-bottom: 2rem;
+    text-shadow: 0 0 20px rgba(217, 70, 239, 0.5);
+}
+
+.detailsBtnGroup {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.previewBtn {
+    padding: 1rem 2rem;
+    background: transparent;
+    border: 2px solid #fff;
+    color: #fff;
+    font-family: var(--font-orbitron);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 4px;
+}
+
+.previewBtn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #0ea5e9;
+    color: #0ea5e9;
+}
+
+.detailCartBtn {
+    padding: 1rem 3rem;
+    background: #0ea5e9;
+    color: #000;
+    border: none;
+    font-family: var(--font-orbitron);
+    font-weight: 900;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+    clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+}
+
+.detailCartBtn:hover {
+    transform: scale(1.05);
+    background: #fff;
+    box-shadow: 0 0 40px rgba(14, 165, 233, 0.8);
+}

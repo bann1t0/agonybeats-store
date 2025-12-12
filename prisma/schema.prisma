@@ -1,0 +1,300 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? 
+  access_token       String? 
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? 
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("user") // "admin" or "user"
+  isSubscribed  Boolean   @default(false)
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  accounts      Account[]
+  sessions      Session[]
+  reviews       Review[]
+  playlists     Playlist[]
+  playlistCollabs PlaylistCollaborator[]
+  subscription  Subscription?
+  favorites     Favorite[]
+  beatRequests  BeatRequest[]
+  purchases     Purchase[]
+  affiliate     Affiliate?
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Beat {
+  id        String   @id @default(cuid())
+  title     String
+  bpm       Int
+  key       String
+  price     Float
+  cover     String   // Path to public/uploads/image.jpg
+  audio     String   // Path to public/uploads/beat.mp3 (Streaming)
+  taggedAudio String? // Path to public/uploads/tagged_beat.mp3 (Free Download)
+  wav       String?  // Path to public/uploads/beat.wav (Purchased)
+  stems     String?  // Path to public/uploads/beat.zip (Purchased)
+  genre     String   @default("Trap")
+  artist    String   @default("AgonyBeats")
+  isFeatured Boolean  @default(false)
+  createdAt DateTime @default(now())
+  licenses  BeatLicense[]
+  reviews   Review[]
+  playlists PlaylistBeat[]
+  favorites Favorite[]
+  analytics BeatAnalytics?
+  purchases Purchase[]
+}
+
+model DiscountCode {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  percentage   Int      // e.g. 20 for 20%
+  uses         Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model Soundkit {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  price        Float
+  cover        String   // Path to cover image
+  audioPreview String   // Path to preview MP3
+  file         String   // Path to Zip/Rar file
+  genre        String   @default("Multi-Genre")
+  createdAt    DateTime @default(now())
+}
+
+model License {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  defaultPrice Float
+  features     String        // Stored as JSON string or clear text
+  order        Int           @default(0)
+  isRecommended Boolean @default(false)
+  beats        BeatLicense[]
+  purchases    Purchase[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model BeatLicense {
+  id        String   @id @default(cuid())
+  beatId    String
+  licenseId String
+  price     Float?   // Override default price
+  beat      Beat     @relation(fields: [beatId], references: [id], onDelete: Cascade)
+  license   License  @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  active    Boolean  @default(true)
+
+  @@unique([beatId, licenseId])
+}
+
+// ============================================
+// NEW MODELS - FEATURE EXPANSION
+// ============================================
+
+// Reviews and Ratings
+model Review {
+  id         String   @id @default(cuid())
+  userId     String
+  beatId     String
+  rating     Int      // 1-5 stars
+  comment    String?
+  verified   Boolean  @default(false) // Has purchased this beat
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beat       Beat     @relation(fields: [beatId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, beatId])
+}
+
+// User Playlists
+model Playlist {
+  id            String                 @id @default(cuid())
+  userId        String
+  name          String
+  description   String?
+  isPublic      Boolean                @default(false)
+  collaborative Boolean                @default(false)
+  createdAt     DateTime               @default(now())
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beats         PlaylistBeat[]
+  collaborators PlaylistCollaborator[]
+}
+
+model PlaylistBeat {
+  id         String   @id @default(cuid())
+  playlistId String
+  beatId     String
+  order      Int      @default(0)
+  addedAt    DateTime @default(now())
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  beat       Beat     @relation(fields: [beatId], references: [id], onDelete: Cascade)
+  
+  @@unique([playlistId, beatId])
+}
+
+model PlaylistCollaborator {
+  id         String   @id @default(cuid())
+  playlistId String
+  userId     String
+  canEdit    Boolean  @default(false)
+  addedAt    DateTime @default(now())
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([playlistId, userId])
+}
+
+// Subscriptions
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  tierId               String    // "base", "advanced", "special"
+  status               String    // "PENDING", "ACTIVE", "CANCELLED", "EXPIRED"
+  paypalSubscriptionId String?   @unique
+  startDate            DateTime  @default(now())
+  currentPeriodEnd     DateTime
+  cancelledAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Favorites/Wishlist
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  beatId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beat      Beat     @relation(fields: [beatId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, beatId])
+}
+
+// Beat Requests
+model BeatRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  bpm         Int?
+  key         String?
+  genre       String?
+  reference   String?   // URL to reference track
+  budget      Float?
+  status      String    @default("pending") // "pending", "accepted", "in_progress", "completed", "rejected"
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Analytics
+model BeatAnalytics {
+  id         String    @id @default(cuid())
+  beatId     String    @unique
+  plays      Int       @default(0)
+  downloads  Int       @default(0)
+  purchases  Int       @default(0)
+  favorites  Int       @default(0)
+  shares     Int       @default(0)
+  lastPlayed DateTime?
+  beat       Beat      @relation(fields: [beatId], references: [id], onDelete: Cascade)
+}
+
+// Purchases
+model Purchase {
+  id             String    @id @default(cuid())
+  userId         String?
+  beatId         String?
+  soundkitId     String?
+  licenseId      String?
+  amount         Float
+  paypalOrderId  String?   @unique
+  status         String    // "completed", "pending", "refunded"
+  buyerEmail     String?   // Added for analytics
+  buyerName      String?   // Added for analytics
+  purchasedAt    DateTime  @default(now())
+  downloadsCount Int       @default(0)
+  lastDownload   DateTime?
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  beat           Beat?     @relation(fields: [beatId], references: [id], onDelete: SetNull)
+  license        License?  @relation(fields: [licenseId], references: [id], onDelete: SetNull)
+}
+
+// Affiliate System
+model Affiliate {
+  id            String           @id @default(cuid())
+  userId        String           @unique
+  code          String           @unique
+  commission    Float            @default(10.0) // Percentage
+  totalEarnings Float            @default(0)
+  status        String           @default("active")
+  createdAt     DateTime         @default(now())
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referrals     AffiliateClick[]
+}
+
+model AffiliateClick {
+  id          String    @id @default(cuid())
+  affiliateId String
+  purchaseId  String?   @unique
+  amount      Float?
+  commission  Float?
+  createdAt   DateTime  @default(now())
+  convertedAt DateTime?
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+}

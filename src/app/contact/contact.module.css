@@ -1,0 +1,158 @@
+/* Contact Page Styles */
+.container {
+    min-height: 100vh;
+    background: #050510;
+    color: #fff;
+    padding: 2rem;
+    font-family: var(--font-geist-sans);
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    margin-bottom: 2rem;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #888;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.backLink:hover {
+    color: var(--neon-blue);
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.title {
+    font-size: 4rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+    /* Cyan glow */
+}
+
+.subtitle {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 4rem;
+    font-size: 1.1rem;
+    max-width: 500px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 3rem 2rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover Effects */
+.card:hover {
+    transform: translateY(-8px);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.emailCard:hover {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.15);
+}
+
+.instaCard:hover {
+    border-color: #d62976;
+    /* Instagram pink/purpleish */
+    box-shadow: 0 0 30px rgba(214, 41, 118, 0.15);
+}
+
+.icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1.5rem;
+    transition: transform 0.3s;
+}
+
+.card:hover .icon {
+    transform: scale(1.1);
+}
+
+.cardTitle {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.cardText {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.cardAction {
+    margin-top: 2rem;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.card:hover .cardAction {
+    opacity: 1;
+}
+
+/* Meteors Decoration */
+.meteorDecoration {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
