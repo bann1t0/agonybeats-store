@@ -5,7 +5,6 @@ import { useCart } from "@/context/CartContext";
 import styles from "./checkout.module.css";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import FallingComets from "@/components/FallingComets";
-import { loadStripe } from "@stripe/stripe-js";
 
 // Icons
 function ArrowLeftIcon() {
@@ -15,7 +14,7 @@ function ArrowLeftIcon() {
 export default function CheckoutPage() {
     const [userEmail, setUserEmail] = useState("");
     const [userName, setUserName] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState("stripe"); // "paypal" or "stripe"
+    const [paymentMethod, setPaymentMethod] = useState("paypal"); // Default to PayPal
     const [processing, setProcessing] = useState(false);
 
     // DEBUG: Check which ID is loaded
@@ -336,42 +335,21 @@ export default function CheckoutPage() {
                             />
                         </div>
 
-                        {/* Payment Method Selector */}
+                        {/* Payment Method - PayPal Only */}
                         <div style={{ marginTop: '2rem', marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', color: '#ccc', marginBottom: '0.75rem', fontWeight: 'bold' }}>Select Payment Method</label>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button
-                                    onClick={() => setPaymentMethod("stripe")}
-                                    style={{
-                                        flex: 1,
-                                        padding: '0.75rem',
-                                        background: paymentMethod === "stripe" ? '#0ea5e9' : 'rgba(255,255,255,0.05)',
-                                        border: paymentMethod === "stripe" ? '2px solid #0ea5e9' : '1px solid #444',
-                                        color: 'white',
-                                        fontWeight: 'bold',
-                                        cursor: 'pointer',
-                                        borderRadius: '4px',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    💳 Credit/Debit Card
-                                </button>
-                                <button
-                                    onClick={() => setPaymentMethod("paypal")}
-                                    style={{
-                                        flex: 1,
-                                        padding: '0.75rem',
-                                        background: paymentMethod === "paypal" ? '#0ea5e9' : 'rgba(255,255,255,0.05)',
-                                        border: paymentMethod === "paypal" ? '2px solid #0ea5e9' : '1px solid #444',
-                                        color: 'white',
-                                        fontWeight: 'bold',
-                                        cursor: 'pointer',
-                                        borderRadius: '4px',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    🅿️ PayPal
-                                </button>
+                            <label style={{ display: 'block', color: '#ccc', marginBottom: '0.75rem', fontWeight: 'bold' }}>Payment Method</label>
+                            <div style={{
+                                padding: '1rem',
+                                background: 'rgba(255,255,255,0.05)',
+                                border: '2px solid #0ea5e9',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}>
+                                <span style={{ fontSize: '1.5rem' }}>🅿️</span>
+                                <span style={{ color: 'white', fontWeight: 'bold' }}>PayPal</span>
+                                <span style={{ color: '#888', marginLeft: 'auto', fontSize: '0.85rem' }}>Credit/Debit Cards Accepted</span>
                             </div>
                         </div>
 
@@ -391,55 +369,32 @@ export default function CheckoutPage() {
                             </div>
                         ) : userEmail && userEmail.includes("@") ? (
                             <div style={{ marginTop: '2rem' }}>
-                                {/* Stripe Payment */}
-                                {paymentMethod === "stripe" && (
-                                    <button
-                                        onClick={handleStripeCheckout}
-                                        disabled={processing}
-                                        className={styles.ctaButton}
-                                        style={{
-                                            width: '100%',
-                                            background: processing ? '#666' : '#6366f1',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            fontSize: '1.1rem',
-                                            fontWeight: 'bold'
-                                        }}
-                                    >
-                                        {processing ? "Processing..." : <>💳 Pay with Card - ${finalTotal.toFixed(2)}</>}
-                                    </button>
-                                )}
-
                                 {/* PayPal Payment */}
-                                {paymentMethod === "paypal" && (
-                                    <PayPalButtons
-                                        style={{ layout: "vertical", shape: "rect", color: "gold" }}
-                                        createOrder={(data, actions) => {
-                                            return actions.order.create({
-                                                purchase_units: [
-                                                    {
-                                                        amount: {
-                                                            value: finalTotal.toFixed(2),
-                                                        },
-                                                        description: `AgonyBeats Order - ${userEmail}`
+                                <PayPalButtons
+                                    style={{ layout: "vertical", shape: "rect", color: "gold" }}
+                                    createOrder={(data, actions) => {
+                                        return actions.order.create({
+                                            purchase_units: [
+                                                {
+                                                    amount: {
+                                                        value: finalTotal.toFixed(2),
                                                     },
-                                                ],
-                                            });
-                                        }}
-                                        onApprove={async (data, actions) => {
-                                            const details = await actions.order.capture();
-                                            console.log("Transaction completed by " + details.payer.name.given_name);
-                                            // Call Order API to get files
-                                            processOrder();
-                                        }}
-                                        onError={(err) => {
-                                            console.error("PayPal Error:", err);
-                                            alert("Payment could not be processed. Please try again.");
-                                        }}
-                                    />
-                                )}
+                                                    description: `AgonyBeats Order - ${userEmail}`
+                                                },
+                                            ],
+                                        });
+                                    }}
+                                    onApprove={async (data, actions) => {
+                                        const details = await actions.order.capture();
+                                        console.log("Transaction completed by " + details.payer.name.given_name);
+                                        // Call Order API to get files
+                                        processOrder();
+                                    }}
+                                    onError={(err) => {
+                                        console.error("PayPal Error:", err);
+                                        alert("Payment could not be processed. Please try again.");
+                                    }}
+                                />
                             </div>
                         ) : (
                             <p style={{ color: '#888', fontStyle: 'italic', textAlign: 'center' }}>
