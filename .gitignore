@@ -51,3 +51,8 @@ next-env.d.ts
 *.rar
 dev.db
 error_log.txt
+
+# Uploaded media (served from R2)
+/public/uploads
+/public/beats
+/public/beat.mp3
