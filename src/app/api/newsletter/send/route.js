@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://agonybeats-store.vercel.app';
+
 export async function POST(req) {
     try {
         console.log("---- STARTING EMAIL SEND ----");
@@ -232,7 +234,7 @@ export async function POST(req) {
                         <!-- Beat Content -->
                         <div style="padding: 40px; text-align: center; background: linear-gradient(180deg, rgba(10, 5, 15, 0.6) 0%, rgba(5, 5, 10, 0.8) 100%);">
                             <!-- Clickable Beat Image -->
-                            <a href="http://localhost:3000/beats/${beat.id}" style="display: inline-block; text-decoration: none;">
+                            <a href="${BASE_URL}/beats/${beat.id}" style="display: inline-block; text-decoration: none;">
                                 <img src="cid:${imageCid}" alt="${beat.title}" style="
                                     width: 300px;
                                     height: 300px;
@@ -270,7 +272,7 @@ export async function POST(req) {
                             ">${beat.bpm} BPM • ${beat.key} • ${beat.genre}</p>
                             
                             <!-- CTA Button -->
-                            <a href="http://localhost:3000/beats/${beat.id}" style="
+                            <a href="${BASE_URL}/beats/${beat.id}" style="
                                 display: inline-block;
                                 background: linear-gradient(135deg, #ff00ff 0%, #ff0080 100%);
                                 color: white;
