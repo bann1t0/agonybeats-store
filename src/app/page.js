@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react"; // Removed useRef
+import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { usePlayer } from "@/context/PlayerContext"; // Import usePlayer
+import { usePlayer } from "@/context/PlayerContext";
 import styles from "./page.module.css";
 import FallingComets from "@/components/FallingComets";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -19,7 +19,7 @@ function DownloadIcon() {
 }
 
 
-export default function Home() {
+function HomeContent() {
   const { data: session } = useSession();
   const { addToCart } = useCart();
 
@@ -525,5 +525,26 @@ export default function Home() {
 
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className={styles.page}>
+        <div className="stars"></div>
+        <div className="stars2"></div>
+        <div className="stars3"></div>
+        <FallingComets />
+        <main className={styles.main}>
+          <div className={styles.hero}>
+            <h1>SOUNDS FROM<br />THE COSMOS</h1>
+            <p>Loading...</p>
+          </div>
+        </main>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation"; // Correct for App Router
 import { useSession } from "next-auth/react";
@@ -32,7 +32,7 @@ function StarsIcon() {
 import { useToast } from "@/context/ToastContext";
 import { usePlayer } from "@/context/PlayerContext"; // Add import
 
-export default function BeatDetailsPage() {
+function BeatDetailsContent() {
     const params = useParams();
     const { id } = params;
     const router = useRouter();
@@ -339,5 +339,13 @@ export default function BeatDetailsPage() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function BeatDetailsPage() {
+    return (
+        <Suspense fallback={<div className={styles.page}><p style={{ color: 'white', marginTop: '4rem' }}>Loading...</p></div>}>
+            <BeatDetailsContent />
+        </Suspense>
     );
 }

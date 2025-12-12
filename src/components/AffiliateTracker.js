@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 /**
  * Affiliate Tracking Component
  * Tracks referral codes from URL and saves to localStorage
  */
-export default function AffiliateTracker() {
+function AffiliateTrackerContent() {
     const searchParams = useSearchParams();
 
     useEffect(() => {
@@ -28,5 +28,13 @@ export default function AffiliateTracker() {
         }
     }, [searchParams]);
 
-    return null; // This component renders nothing
+    return null;
+}
+
+export default function AffiliateTracker() {
+    return (
+        <Suspense fallback={null}>
+            <AffiliateTrackerContent />
+        </Suspense>
+    );
 }
