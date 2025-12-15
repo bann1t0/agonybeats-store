@@ -394,6 +394,22 @@ export default function AdminPage() {
         }
     }
 
+    async function deleteDiscount(id) {
+        if (!confirm("Delete this discount code? It will become unusable.")) return;
+
+        try {
+            const res = await fetch(`/api/discounts/${id}`, { method: "DELETE" });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || "Failed to delete");
+            }
+            setMessage("Discount Code Deleted! 🗑️");
+            fetchDiscounts();
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+
     /* --- LICENSE FUNCTIONS --- */
     async function createLicense(e) {
         e.preventDefault();
@@ -1049,13 +1065,29 @@ export default function AdminPage() {
 
                     <div style={{ display: 'grid', gap: '1rem' }}>
                         {discounts.map(d => (
-                            <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '1rem', border: '1px solid #333' }}>
+                            <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '1rem', border: '1px solid #333', borderRadius: '8px' }}>
                                 <div>
                                     <span style={{ color: 'var(--neon-blue)', fontWeight: 'bold', fontSize: '1.1rem' }}>{d.code}</span>
                                     <span style={{ color: '#888', marginLeft: '1rem' }}>{d.percentage}% OFF</span>
                                 </div>
-                                <div style={{ color: '#fff' }}>
-                                    Used: <strong style={{ color: 'lime' }}>{d.uses}</strong> times
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <span style={{ color: '#fff' }}>
+                                        Used: <strong style={{ color: 'lime' }}>{d.uses}</strong> times
+                                    </span>
+                                    <button
+                                        onClick={() => deleteDiscount(d.id)}
+                                        style={{
+                                            padding: '0.5rem 1rem',
+                                            background: '#ef4444',
+                                            border: 'none',
+                                            color: 'white',
+                                            cursor: 'pointer',
+                                            borderRadius: '4px',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                         ))}
