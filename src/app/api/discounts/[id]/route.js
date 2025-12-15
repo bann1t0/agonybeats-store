@@ -13,7 +13,7 @@ export async function DELETE(req, { params }) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { id } = params;
+        const { id } = await params;  // params is a Promise in Next.js 15
 
         await prisma.discountCode.delete({
             where: { id }
