@@ -74,6 +74,25 @@ export async function POST(req) {
         const isUpgrade = tierOrder[newTierId] > tierOrder[subscription.tierId];
         console.log('Is upgrade:', isUpgrade);
 
+        // FALLBACK: If no PayPal subscription ID, update tier directly in DB (for testing/manual subs)
+        if (!subscription.paypalSubscriptionId) {
+            console.log('No PayPal subscription ID - updating tier directly in database');
+
+            await prisma.subscription.update({
+                where: { id: subscription.id },
+                data: {
+                    tierId: newTierId,
+                    updatedAt: new Date()
+                }
+            });
+
+            return NextResponse.json({
+                success: true,
+                requiresApproval: false,
+                message: `Successfully ${isUpgrade ? 'upgraded' : 'downgraded'} to ${newTier.name}`
+            });
+        }
+
         // Get new plan ID
         const newPlanId = planIdMap[newTierId];
         if (!newPlanId) {
