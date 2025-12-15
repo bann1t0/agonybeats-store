@@ -64,8 +64,65 @@ function HomeContent() {
     key: ""
   });
 
+  // Subscriber state for free downloads
+  const [subscriptionData, setSubscriptionData] = useState(null);
+  const [downloading, setDownloading] = useState(null);
+
   // Extract unique genres for dropdown
   const genres = [...new Set(allBeats.map(b => b.genre).filter(Boolean))];
+
+  // Fetch subscription data for logged-in users
+  useEffect(() => {
+    if (session?.user) {
+      fetch('/api/subscription-downloads')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && data.hasActiveSubscription) {
+            setSubscriptionData(data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [session]);
+
+  // Handle subscriber free download
+  async function handleSubscriberDownload(beat) {
+    if (!subscriptionData || subscriptionData.remaining <= 0) return;
+
+    setDownloading(beat.id);
+    try {
+      const res = await fetch('/api/subscription-downloads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ beatId: beat.id })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.downloadUrl) {
+        // Trigger download
+        const link = document.createElement('a');
+        link.href = data.downloadUrl;
+        link.download = `${beat.title}.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Update remaining count
+        setSubscriptionData(prev => ({
+          ...prev,
+          remaining: data.remaining,
+          downloadsUsed: prev.downloadsUsed + 1
+        }));
+      } else {
+        alert(data.error || 'Download failed');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+    } finally {
+      setDownloading(null);
+    }
+  }
 
   // Fetch Beats
   useEffect(() => {
@@ -460,10 +517,60 @@ function HomeContent() {
                       <Link href={`/beats/${beat.id}${licenseQuery}`} className={styles.catPrice} onClick={(e) => e.stopPropagation()}>
                         OPTIONS
                       </Link>
-                      <Link href={`/beats/${beat.id}${licenseQuery}`} className={styles.catAddBtn} onClick={(e) => e.stopPropagation()}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                        BUY
-                      </Link>
+
+                      {/* Subscriber FREE Download Button */}
+                      {subscriptionData && subscriptionData.remaining > 0 ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSubscriberDownload(beat);
+                          }}
+                          disabled={downloading === beat.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.6rem 1rem',
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '0.85rem',
+                            boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)',
+                            transition: 'all 0.3s',
+                            position: 'relative',
+                            overflow: 'hidden'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.6)';
+                            e.currentTarget.style.transform = 'scale(1.05)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.4)';
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                          title={`${subscriptionData.remaining} free downloads remaining`}
+                        >
+                          <DownloadIcon />
+                          {downloading === beat.id ? 'Downloading...' : 'FREE'}
+                          <span style={{
+                            fontSize: '0.7rem',
+                            background: 'rgba(255,255,255,0.2)',
+                            padding: '0.15rem 0.4rem',
+                            borderRadius: '10px',
+                            marginLeft: '0.25rem'
+                          }}>
+                            {subscriptionData.remaining} left
+                          </span>
+                        </button>
+                      ) : (
+                        <Link href={`/beats/${beat.id}${licenseQuery}`} className={styles.catAddBtn} onClick={(e) => e.stopPropagation()}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                          BUY
+                        </Link>
+                      )}
 
                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <FavoriteButton beatId={beat.id} size={20} />
