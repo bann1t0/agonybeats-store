@@ -23,7 +23,7 @@ export default function AnalyticsDashboard() {
             console.log('=== Fetching analytics ===');
             console.log('Time range:', timeRange);
 
-            const res = await fetch(`/api/test-analytics`); // Using working API
+            const res = await fetch(`/api/admin/analytics?days=${timeRange}`);
             console.log('Response status:', res.status);
             console.log('Response ok:', res.ok);
 
@@ -35,26 +35,10 @@ export default function AnalyticsDashboard() {
                 throw new Error('Failed to fetch analytics');
             }
 
-            const rawData = await res.json();
+            const data = await res.json();
             console.log('=== Analytics Data Received ===');
-            console.log(rawData);
+            console.log(data);
 
-            // Transform test API response to expected format
-            const data = {
-                overview: {
-                    totalRevenue: rawData.totalRevenue || 0,
-                    totalDownloads: rawData.purchaseCount || 0,
-                    totalPlays: 0,
-                    activeSubscriptions: 0,
-                    totalUsers: rawData.totalUsers || 0,
-                    totalBeats: rawData.totalBeats || 0,
-                    newUsers: rawData.newUsers || 0
-                },
-                charts: {
-                    revenueByDay: rawData.revenueByDay || []
-                },
-                topBeats: rawData.topPerforming || { mostSold: [], mostFavorited: [], mostPlayed: [] }
-            };
             setAnalytics(data);
         } catch (error) {
             console.error('=== Fetch Error ===');
