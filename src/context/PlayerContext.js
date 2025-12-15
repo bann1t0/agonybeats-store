@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useRef, useEffect } from "react";
+import { trackPlay } from "@/lib/analytics";
 
 const PlayerContext = createContext();
 
@@ -42,7 +43,10 @@ export function PlayerProvider({ children }) {
         if (currentBeat?.id === beat.id) {
             togglePlay();
         } else {
-            // New track
+            // New track - track the play event
+            if (beat.id) {
+                trackPlay(beat.id);
+            }
             setCurrentBeat(beat);
             setIsPlaying(true);
             // The useEffect in StickyPlayer will detect change and play

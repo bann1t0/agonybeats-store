@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// WORKING VERSION - copied from test-analytics
+// WORKING VERSION - with play tracking
 export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
@@ -24,6 +24,12 @@ export async function GET(req) {
         const newUsers = await prisma.user.count({
             where: { createdAt: { gte: startDate } }
         });
+
+        // Get total plays from BeatAnalytics
+        const playsAggregate = await prisma.beatAnalytics.aggregate({
+            _sum: { plays: true }
+        });
+        const totalPlays = playsAggregate._sum.plays || 0;
 
         // Get purchases with dates for chart
         const purchases = await prisma.purchase.findMany({
@@ -81,7 +87,7 @@ export async function GET(req) {
             overview: {
                 totalRevenue: parseFloat((aggregate._sum.amount || 0).toFixed(2)),
                 totalDownloads: purchaseCount,
-                totalPlays: 0,
+                totalPlays,
                 activeSubscriptions: 0,
                 totalUsers,
                 totalBeats,
