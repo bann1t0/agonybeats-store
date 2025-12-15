@@ -138,7 +138,10 @@ function BeatDetailsContent() {
     // Check if a license matches the subscription tier
     function isLicenseIncludedInSubscription(licenseType) {
         const remaining = subscriptionData?.downloads?.remaining;
-        if (!subscriptionData || remaining === 0 || remaining === '0') return false;
+        // Handle: number, string number, 'Unlimited', or missing
+        const hasRemainingDownloads = remaining === 'Unlimited' || remaining === Infinity || (Number(remaining) > 0);
+        if (!subscriptionData || !hasRemainingDownloads) return false;
+
         const tierLicenseType = subscriptionData.tier?.licenseType;
         if (!tierLicenseType) return false;
 
@@ -153,7 +156,11 @@ function BeatDetailsContent() {
     // Handle subscriber free download
     async function handleSubscriberDownload() {
         const remaining = subscriptionData?.downloads?.remaining;
-        if (!subscriptionData || remaining === 0 || !beat) return;
+        const hasRemainingDownloads = remaining === 'Unlimited' || remaining === Infinity || (Number(remaining) > 0);
+        if (!subscriptionData || !hasRemainingDownloads || !beat) {
+            console.log('Cannot download:', { subscriptionData, remaining, beat: !!beat });
+            return;
+        }
 
         setDownloading(true);
         try {

@@ -86,7 +86,12 @@ function HomeContent() {
   }, [session]);
 
   async function handleSubscriberDownload(beat) {
-    if (!subscriptionData || (subscriptionData.downloads?.remaining === 0)) return;
+    const remaining = subscriptionData?.downloads?.remaining;
+    const hasRemainingDownloads = remaining === 'Unlimited' || remaining === Infinity || (Number(remaining) > 0);
+    if (!subscriptionData || !hasRemainingDownloads) {
+      console.log('Cannot download:', { subscriptionData, remaining });
+      return;
+    }
 
     setDownloading(beat.id);
     try {
@@ -535,7 +540,7 @@ function HomeContent() {
                       </Link>
 
                       {/* Subscriber FREE Download Button */}
-                      {subscriptionData && subscriptionData.downloads?.remaining > 0 ? (
+                      {subscriptionData && (subscriptionData.downloads?.remaining === 'Unlimited' || subscriptionData.downloads?.remaining === Infinity || Number(subscriptionData.downloads?.remaining) > 0) ? (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
