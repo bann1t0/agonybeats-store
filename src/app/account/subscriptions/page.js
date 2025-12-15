@@ -1,12 +1,36 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getTier, getRemainingDownloads, SUBSCRIPTION_TIERS } from '@/lib/subscriptionTiers';
 
-export default function SubscriptionsManagementPage() {
+// Wrapper component to handle Suspense for useSearchParams
+export default function SubscriptionsPage() {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <SubscriptionsManagementPage />
+        </Suspense>
+    );
+}
+
+function LoadingFallback() {
+    return (
+        <div style={{
+            minHeight: '100vh',
+            background: '#0a0a0a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingTop: '120px'
+        }}>
+            <p style={{ color: '#888', fontSize: '1.2rem' }}>Loading...</p>
+        </div>
+    );
+}
+
+function SubscriptionsManagementPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
