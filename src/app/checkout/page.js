@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useCart } from "@/context/CartContext";
 import styles from "./checkout.module.css";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
@@ -12,10 +13,30 @@ function ArrowLeftIcon() {
 }
 
 export default function CheckoutPage() {
+    const { data: session } = useSession();
     const [userEmail, setUserEmail] = useState("");
     const [userName, setUserName] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("paypal"); // Default to PayPal
     const [processing, setProcessing] = useState(false);
+
+    // Subscription discount state
+    const [subscriptionDiscount, setSubscriptionDiscount] = useState(0);
+    const [subscriptionTier, setSubscriptionTier] = useState(null);
+
+    // Fetch subscription status for discount
+    useEffect(() => {
+        if (session) {
+            fetch('/api/subscription-downloads')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.hasSubscription && data.tier?.discountPercentage) {
+                        setSubscriptionDiscount(data.tier.discountPercentage);
+                        setSubscriptionTier(data.tier);
+                    }
+                })
+                .catch(err => console.error('Error fetching subscription:', err));
+        }
+    }, [session]);
 
     // DEBUG: Check which ID is loaded
     console.log("Current PayPal Client ID:", process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "Using Fallback (Sandbox)");
@@ -40,7 +61,11 @@ export default function CheckoutPage() {
     const [localCouponMsg, setLocalCouponMsg] = useState("");
 
     // Calculate totals
-    const { subtotal, bundleDiscount, couponDiscount, finalTotal, hasBundle } = getCartTotals();
+    const { subtotal, bundleDiscount, couponDiscount, finalTotal: cartTotal, hasBundle } = getCartTotals();
+
+    // Apply subscription discount on top
+    const subscriptionDiscountAmount = (cartTotal * subscriptionDiscount) / 100;
+    const finalTotal = Math.max(0, cartTotal - subscriptionDiscountAmount);
 
     const handleApplyCoupon = () => {
         const code = couponInput.toUpperCase();
@@ -266,6 +291,13 @@ export default function CheckoutPage() {
                                 <div className={styles.totalRow} style={{ fontSize: '1rem', color: 'var(--neon-purple)' }}>
                                     <span>Coupon ({appliedCoupon.code})</span>
                                     <span>-${couponDiscount.toFixed(2)}</span>
+                                </div>
+                            )}
+
+                            {subscriptionDiscount > 0 && (
+                                <div className={styles.totalRow} style={{ fontSize: '1rem', color: '#10b981' }}>
+                                    <span>✨ Subscriber Discount ({subscriptionTier?.name} - {subscriptionDiscount}%)</span>
+                                    <span>-€{subscriptionDiscountAmount.toFixed(2)}</span>
                                 </div>
                             )}
 

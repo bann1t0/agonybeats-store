@@ -190,23 +190,43 @@ export default function SubscriptionsManagementPage() {
                                 </div>
                             </div>
 
-                            {subscription.status === 'ACTIVE' && (
-                                <button
-                                    onClick={handleCancel}
-                                    disabled={canceling}
+                            {/* Access Library Button */}
+                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                <Link
+                                    href="/account/library"
                                     style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
                                         padding: '0.75rem 1.5rem',
-                                        background: 'transparent',
-                                        border: '1px solid #ef4444',
-                                        color: '#ef4444',
+                                        background: tier.color,
+                                        color: 'white',
+                                        textDecoration: 'none',
                                         borderRadius: '8px',
-                                        cursor: 'pointer',
                                         fontWeight: 'bold'
                                     }}
                                 >
-                                    {canceling ? 'Canceling...' : 'Cancel Subscription'}
-                                </button>
-                            )}
+                                    📚 Access My Library
+                                </Link>
+
+                                {subscription.status === 'ACTIVE' && (
+                                    <button
+                                        onClick={handleCancel}
+                                        disabled={canceling}
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            background: 'transparent',
+                                            border: '1px solid #ef4444',
+                                            color: '#ef4444',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        {canceling ? 'Canceling...' : 'Cancel Subscription'}
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         {/* Benefits */}

@@ -55,6 +55,7 @@ model User {
   beatRequests  BeatRequest[]
   purchases     Purchase[]
   affiliate     Affiliate?
+  subscriptionDownloads SubscriptionDownload[]
 }
 
 model VerificationToken {
@@ -79,6 +80,8 @@ model Beat {
   genre     String   @default("Trap")
   artist    String   @default("AgonyBeats")
   isFeatured Boolean  @default(false)
+  earlyAccess Boolean @default(false) // Only visible to subscribers
+  earlyAccessUntil DateTime? // When beat becomes public (1 month from upload)
   createdAt DateTime @default(now())
   licenses  BeatLicense[]
   reviews   Review[]
@@ -86,6 +89,7 @@ model Beat {
   favorites Favorite[]
   analytics BeatAnalytics?
   purchases Purchase[]
+  subscriptionDownloads SubscriptionDownload[]
 }
 
 model DiscountCode {
@@ -211,6 +215,23 @@ model Subscription {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  downloads            SubscriptionDownload[]
+}
+
+// Subscription Downloads - track monthly beat downloads for subscribers
+model SubscriptionDownload {
+  id             String   @id @default(cuid())
+  userId         String
+  beatId         String
+  subscriptionId String
+  licenseType    String   @default("MP3_LEASE") // Type of license granted
+  downloadedAt   DateTime @default(now())
+  
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beat         Beat         @relation(fields: [beatId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, beatId, subscriptionId]) // Prevent duplicate downloads
 }
 
 // Favorites/Wishlist
