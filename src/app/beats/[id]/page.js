@@ -152,7 +152,8 @@ function BeatDetailsContent() {
 
     // Handle subscriber free download
     async function handleSubscriberDownload() {
-        if (!subscriptionData || subscriptionData.remaining <= 0 || !beat) return;
+        const remaining = subscriptionData?.downloads?.remaining;
+        if (!subscriptionData || remaining === 0 || !beat) return;
 
         setDownloading(true);
         try {
@@ -165,21 +166,38 @@ function BeatDetailsContent() {
             const data = await res.json();
 
             if (res.ok && data.downloadUrl) {
-                // Trigger download
-                const link = document.createElement('a');
-                link.href = data.downloadUrl;
-                link.download = `${beat.title}.mp3`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // 1. Download the beat file
+                const beatLink = document.createElement('a');
+                beatLink.href = data.downloadUrl;
+                beatLink.download = `${beat.title}.mp3`;
+                document.body.appendChild(beatLink);
+                beatLink.click();
+                document.body.removeChild(beatLink);
 
-                showToast(`Download started! ${data.remaining} downloads remaining.`, 'success');
+                // 2. Download the license file
+                const licenseType = data.licenseType || 'MP3_LEASE';
+                const buyerName = session?.user?.name || session?.user?.email || 'Subscriber';
+                const licenseUrl = `/api/license?beatTitle=${encodeURIComponent(beat.title)}&buyerName=${encodeURIComponent(buyerName)}&licenseType=${encodeURIComponent(licenseType)}&date=${encodeURIComponent(new Date().toLocaleDateString())}`;
+
+                // Small delay to avoid browser blocking multiple downloads
+                setTimeout(() => {
+                    const licenseLink = document.createElement('a');
+                    licenseLink.href = licenseUrl;
+                    licenseLink.download = `${beat.title} - ${licenseType} License.txt`;
+                    document.body.appendChild(licenseLink);
+                    licenseLink.click();
+                    document.body.removeChild(licenseLink);
+                }, 500);
+
+                showToast(`Download started! Beat + License. ${data.remaining} downloads remaining.`, 'success');
 
                 // Update remaining count
                 setSubscriptionData(prev => ({
                     ...prev,
-                    remaining: data.remaining,
-                    downloadsUsed: prev.downloadsUsed + 1
+                    downloads: {
+                        ...prev.downloads,
+                        remaining: data.remaining
+                    }
                 }));
             } else {
                 showToast(data.error || 'Download failed', 'error');

@@ -99,13 +99,28 @@ function HomeContent() {
       const data = await res.json();
 
       if (res.ok && data.downloadUrl) {
-        // Trigger download
-        const link = document.createElement('a');
-        link.href = data.downloadUrl;
-        link.download = `${beat.title}.mp3`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // 1. Download the beat file
+        const beatLink = document.createElement('a');
+        beatLink.href = data.downloadUrl;
+        beatLink.download = `${beat.title}.mp3`;
+        document.body.appendChild(beatLink);
+        beatLink.click();
+        document.body.removeChild(beatLink);
+
+        // 2. Download the license file
+        const licenseType = data.licenseType || 'MP3_LEASE';
+        const buyerName = session?.user?.name || session?.user?.email || 'Subscriber';
+        const licenseUrl = `/api/license?beatTitle=${encodeURIComponent(beat.title)}&buyerName=${encodeURIComponent(buyerName)}&licenseType=${encodeURIComponent(licenseType)}&date=${encodeURIComponent(new Date().toLocaleDateString())}`;
+
+        // Small delay to avoid browser blocking multiple downloads
+        setTimeout(() => {
+          const licenseLink = document.createElement('a');
+          licenseLink.href = licenseUrl;
+          licenseLink.download = `${beat.title} - ${licenseType} License.txt`;
+          document.body.appendChild(licenseLink);
+          licenseLink.click();
+          document.body.removeChild(licenseLink);
+        }, 500);
 
         // Update remaining count
         setSubscriptionData(prev => ({
