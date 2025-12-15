@@ -364,7 +364,7 @@ function SubscriptionsManagementPage() {
                                 gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                                 gap: '1rem'
                             }}>
-                                {SUBSCRIPTION_TIERS.map(planTier => {
+                                {Object.values(SUBSCRIPTION_TIERS).map(planTier => {
                                     const isCurrent = subscription?.tierId === planTier.id;
                                     const tierOrder = { 'base': 1, 'advanced': 2, 'special': 3 };
                                     const isUpgrade = tierOrder[planTier.id] > tierOrder[subscription?.tierId];
