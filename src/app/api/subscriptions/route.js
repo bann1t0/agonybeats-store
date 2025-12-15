@@ -99,8 +99,12 @@ export async function POST(req) {
         const givenName = nameParts[0] || 'User';
         const surname = nameParts.slice(1).join(' ') || 'Customer';
 
+        // Start time should be in the future (at least 1 minute from now)
+        const startTime = new Date(Date.now() + 60000).toISOString();
+
         const requestBody = {
             plan_id: paypalPlanId,
+            start_time: startTime,
             subscriber: {
                 name: {
                     given_name: givenName,
@@ -113,6 +117,10 @@ export async function POST(req) {
                 locale: 'en-US',
                 shipping_preference: 'NO_SHIPPING',
                 user_action: 'SUBSCRIBE_NOW',
+                payment_method: {
+                    payer_selected: 'PAYPAL',
+                    payee_preferred: 'IMMEDIATE_PAYMENT_REQUIRED'
+                },
                 return_url: `${process.env.NEXTAUTH_URL}/api/subscriptions/success`,
                 cancel_url: `${process.env.NEXTAUTH_URL}/subscribe?canceled=true`
             }
