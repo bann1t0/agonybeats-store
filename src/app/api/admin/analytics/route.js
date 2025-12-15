@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// WORKING VERSION - with play tracking
+// Admin Analytics API - with complete top beats formatting
 export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
@@ -9,7 +9,7 @@ export async function GET(req) {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
-        // Test simple queries that we know work
+        // Basic counts
         const purchaseCount = await prisma.purchase.count({
             where: { status: 'completed' }
         });
@@ -55,33 +55,73 @@ export async function GET(req) {
             .map(([date, revenue]) => ({ date, revenue: parseFloat(revenue.toFixed(2)) }))
             .sort((a, b) => a.date.localeCompare(b.date));
 
-        // Top beats
-        const beatPurchases = {};
-        purchases.forEach(p => {
-            if (p.beatId) {
-                beatPurchases[p.beatId] = (beatPurchases[p.beatId] || 0) + 1;
+        // Get all beats with their analytics for top performing
+        const allBeats = await prisma.beat.findMany({
+            select: {
+                id: true,
+                title: true,
+                artist: true,
+                cover: true
             }
         });
 
-        const topBeatIds = Object.entries(beatPurchases)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 10)
-            .map(([id]) => id);
-
-        const beats = await prisma.beat.findMany({
-            where: { id: { in: topBeatIds } },
-            select: { id: true, title: true, artist: true }
+        // Get analytics for beats
+        const beatAnalyticsList = await prisma.beatAnalytics.findMany({
+            select: {
+                beatId: true,
+                plays: true,
+                favorites: true,
+                purchases: true
+            }
         });
 
-        const topBeats = topBeatIds.map(id => {
-            const beat = beats.find(b => b.id === id);
-            return {
-                beatId: id,
-                title: beat?.title || 'Unknown',
-                artist: beat?.artist || 'Unknown',
-                purchases: beatPurchases[id]
-            };
+        // Get purchase counts per beat
+        const beatPurchaseCounts = {};
+        purchases.forEach(p => {
+            if (p.beatId) {
+                beatPurchaseCounts[p.beatId] = (beatPurchaseCounts[p.beatId] || 0) + 1;
+            }
         });
+
+        // Get favorites count per beat
+        const favoriteCounts = await prisma.favorite.groupBy({
+            by: ['beatId'],
+            _count: true
+        });
+        const beatFavoriteCounts = {};
+        favoriteCounts.forEach(f => {
+            beatFavoriteCounts[f.beatId] = f._count;
+        });
+
+        // Build analytics map
+        const analyticsMap = {};
+        beatAnalyticsList.forEach(a => {
+            analyticsMap[a.beatId] = a;
+        });
+
+        // Build combined beat data
+        const combinedBeats = allBeats.map(beat => ({
+            ...beat,
+            sales: beatPurchaseCounts[beat.id] || 0,
+            favorites: beatFavoriteCounts[beat.id] || analyticsMap[beat.id]?.favorites || 0,
+            plays: analyticsMap[beat.id]?.plays || 0
+        }));
+
+        // Sort for each category
+        const mostSold = [...combinedBeats]
+            .sort((a, b) => b.sales - a.sales)
+            .slice(0, 5)
+            .filter(b => b.sales > 0);
+
+        const mostFavorited = [...combinedBeats]
+            .sort((a, b) => b.favorites - a.favorites)
+            .slice(0, 5)
+            .filter(b => b.favorites > 0);
+
+        const mostPlayed = [...combinedBeats]
+            .sort((a, b) => b.plays - a.plays)
+            .slice(0, 5)
+            .filter(b => b.plays > 0);
 
         return NextResponse.json({
             overview: {
@@ -96,7 +136,11 @@ export async function GET(req) {
             charts: {
                 revenueByDay: formattedRevenueByDay
             },
-            topBeats
+            topBeats: {
+                mostSold,
+                mostFavorited,
+                mostPlayed
+            }
         });
 
     } catch (error) {
@@ -112,7 +156,7 @@ export async function GET(req) {
                 newUsers: 0
             },
             charts: { revenueByDay: [] },
-            topBeats: []
+            topBeats: { mostSold: [], mostFavorited: [], mostPlayed: [] }
         });
     }
 }
