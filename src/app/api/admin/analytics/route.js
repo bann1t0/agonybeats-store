@@ -74,6 +74,15 @@ export async function GET(req) {
             console.error('Error aggregating plays:', e.message);
         }
 
+        // Get total favorites
+        let totalFavorites = 0;
+        try {
+            totalFavorites = await prisma.favorite.count();
+            console.log('Total favorites:', totalFavorites);
+        } catch (e) {
+            console.error('Error counting favorites:', e.message);
+        }
+
         // Get purchases with dates for chart
         const purchases = await prisma.purchase.findMany({
             where: {
@@ -171,6 +180,7 @@ export async function GET(req) {
                 totalRevenue,
                 totalDownloads: purchaseCount,
                 totalPlays,
+                totalFavorites,
                 activeSubscriptions: 0,
                 totalUsers,
                 totalBeats,
@@ -193,6 +203,7 @@ export async function GET(req) {
                 totalRevenue: 0,
                 totalDownloads: 0,
                 totalPlays: 0,
+                totalFavorites: 0,
                 activeSubscriptions: 0,
                 totalUsers: 0,
                 totalBeats: 0,

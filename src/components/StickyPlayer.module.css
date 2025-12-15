@@ -150,8 +150,20 @@
     border-radius: 50%;
 }
 
-.volumeBar:hover::-webkit-slider-thumb {
+.volumeBar::-webkit-slider-thumb:hover {
     background: #fff;
+}
+
+.stickyLike {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    transition: transform 0.2s;
+}
+
+.stickyLike:hover {
+    transform: scale(1.1);
 }
 
 @media (max-width: 768px) {
@@ -176,5 +188,9 @@
     .stickyVolume {
         display: none;
         /* Hide volume on mobile to save space */
+    }
+
+    .stickyLike {
+        padding: 0 0.5rem;
     }
 }
