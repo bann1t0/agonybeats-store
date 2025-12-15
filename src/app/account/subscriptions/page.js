@@ -30,6 +30,41 @@ function LoadingFallback() {
     );
 }
 
+// SVG Icons
+function LibraryIcon() {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+    );
+}
+
+function UpgradeIcon() {
+    return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    );
+}
+
+function DowngradeIcon() {
+    return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    );
+}
+
+function CheckCircleIcon() {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+    );
+}
+
 function SubscriptionsManagementPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -284,7 +319,7 @@ function SubscriptionsManagementPage() {
                                         fontWeight: 'bold'
                                     }}
                                 >
-                                    📚 Access My Library
+                                    <LibraryIcon /> Access My Library
                                 </Link>
 
                                 {subscription.status === 'ACTIVE' && (
@@ -355,7 +390,7 @@ function SubscriptionsManagementPage() {
                                     color: '#10b981',
                                     marginBottom: '1.5rem'
                                 }}>
-                                    ✅ {successMessage}
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircleIcon /> {successMessage}</span>
                                 </div>
                             )}
 
@@ -440,7 +475,7 @@ function SubscriptionsManagementPage() {
                                                 >
                                                     {upgrading === planTier.id
                                                         ? 'Processing...'
-                                                        : isUpgrade ? '⬆️ Upgrade' : '⬇️ Downgrade'}
+                                                        : isUpgrade ? <><UpgradeIcon /> Upgrade</> : <><DowngradeIcon /> Downgrade</>}
                                                 </button>
                                             )}
                                         </div>
