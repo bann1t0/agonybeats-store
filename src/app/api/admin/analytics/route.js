@@ -9,27 +9,70 @@ export async function GET(req) {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
+        console.log('=== Analytics API Starting ===');
+        console.log('Days:', days);
+
         // Basic counts
-        const purchaseCount = await prisma.purchase.count({
-            where: { status: 'completed' }
-        });
+        let purchaseCount = 0;
+        let totalRevenue = 0;
+        let totalUsers = 0;
+        let totalBeats = 0;
+        let newUsers = 0;
+        let totalPlays = 0;
 
-        const aggregate = await prisma.purchase.aggregate({
-            _sum: { amount: true },
-            where: { status: 'completed' }
-        });
+        try {
+            purchaseCount = await prisma.purchase.count({
+                where: { status: 'completed' }
+            });
+            console.log('Purchase count:', purchaseCount);
+        } catch (e) {
+            console.error('Error counting purchases:', e.message);
+        }
 
-        const totalUsers = await prisma.user.count();
-        const totalBeats = await prisma.beat.count();
-        const newUsers = await prisma.user.count({
-            where: { createdAt: { gte: startDate } }
-        });
+        try {
+            const aggregate = await prisma.purchase.aggregate({
+                _sum: { amount: true },
+                where: { status: 'completed' }
+            });
+            totalRevenue = parseFloat((aggregate._sum.amount || 0).toFixed(2));
+            console.log('Total revenue:', totalRevenue);
+        } catch (e) {
+            console.error('Error aggregating revenue:', e.message);
+        }
+
+        try {
+            totalUsers = await prisma.user.count();
+            console.log('Total users:', totalUsers);
+        } catch (e) {
+            console.error('Error counting users:', e.message);
+        }
+
+        try {
+            totalBeats = await prisma.beat.count();
+            console.log('Total beats:', totalBeats);
+        } catch (e) {
+            console.error('Error counting beats:', e.message);
+        }
+
+        try {
+            newUsers = await prisma.user.count({
+                where: { createdAt: { gte: startDate } }
+            });
+            console.log('New users:', newUsers);
+        } catch (e) {
+            console.error('Error counting new users:', e.message);
+        }
 
         // Get total plays from BeatAnalytics
-        const playsAggregate = await prisma.beatAnalytics.aggregate({
-            _sum: { plays: true }
-        });
-        const totalPlays = playsAggregate._sum.plays || 0;
+        try {
+            const playsAggregate = await prisma.beatAnalytics.aggregate({
+                _sum: { plays: true }
+            });
+            totalPlays = playsAggregate._sum.plays || 0;
+            console.log('Total plays:', totalPlays);
+        } catch (e) {
+            console.error('Error aggregating plays:', e.message);
+        }
 
         // Get purchases with dates for chart
         const purchases = await prisma.purchase.findMany({
@@ -125,7 +168,7 @@ export async function GET(req) {
 
         return NextResponse.json({
             overview: {
-                totalRevenue: parseFloat((aggregate._sum.amount || 0).toFixed(2)),
+                totalRevenue,
                 totalDownloads: purchaseCount,
                 totalPlays,
                 activeSubscriptions: 0,
