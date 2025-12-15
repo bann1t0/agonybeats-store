@@ -71,25 +71,27 @@ export async function POST(req) {
             throw new Error(`Invalid tier ID: ${tierId}`);
         }
 
-        // Check if user already has active subscription
+        // Check if user already has ANY subscription
         const existing = await prisma.subscription.findFirst({
             where: {
-                userId: session.user.id,
-                status: 'ACTIVE'
+                userId: session.user.id
             }
         });
+
+        console.log('Existing subscription found:', existing);
 
         if (existing) {
-            return NextResponse.json({ error: "You already have an active subscription. Go to your account to manage it." }, { status: 400 });
-        }
-
-        // Delete any old non-active subscriptions to avoid unique constraint issues
-        await prisma.subscription.deleteMany({
-            where: {
-                userId: session.user.id,
-                status: { not: 'ACTIVE' }
+            if (existing.status === 'ACTIVE') {
+                return NextResponse.json({ error: "You already have an active subscription. Go to your account to manage it." }, { status: 400 });
             }
-        });
+
+            // Delete any non-active subscriptions to allow new subscription
+            console.log('Deleting old subscription with status:', existing.status);
+            await prisma.subscription.delete({
+                where: { id: existing.id }
+            });
+            console.log('Old subscription deleted successfully');
+        }
 
         // Check PayPal credentials
         console.log('PayPal Mode:', process.env.PAYPAL_MODE);
