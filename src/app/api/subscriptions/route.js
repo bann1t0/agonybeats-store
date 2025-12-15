@@ -80,8 +80,16 @@ export async function POST(req) {
         });
 
         if (existing) {
-            return NextResponse.json({ error: "You already have an active subscription" }, { status: 400 });
+            return NextResponse.json({ error: "You already have an active subscription. Go to your account to manage it." }, { status: 400 });
         }
+
+        // Delete any old non-active subscriptions to avoid unique constraint issues
+        await prisma.subscription.deleteMany({
+            where: {
+                userId: session.user.id,
+                status: { not: 'ACTIVE' }
+            }
+        });
 
         // Check PayPal credentials
         console.log('PayPal Mode:', process.env.PAYPAL_MODE);
