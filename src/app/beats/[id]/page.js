@@ -120,7 +120,7 @@ function BeatDetailsContent() {
             fetch('/api/subscription-downloads')
                 .then(res => res.ok ? res.json() : null)
                 .then(data => {
-                    if (data && data.hasActiveSubscription) {
+                    if (data && data.hasSubscription) {
                         setSubscriptionData(data);
                     }
                 })
@@ -137,8 +137,9 @@ function BeatDetailsContent() {
 
     // Check if a license matches the subscription tier
     function isLicenseIncludedInSubscription(licenseType) {
-        if (!subscriptionData || subscriptionData.remaining <= 0) return false;
-        const tierLicenseType = subscriptionData.tier?.benefits?.licenseType;
+        const remaining = subscriptionData?.downloads?.remaining;
+        if (!subscriptionData || remaining === 0 || remaining === '0') return false;
+        const tierLicenseType = subscriptionData.tier?.licenseType;
         if (!tierLicenseType) return false;
 
         const normalizedLicType = licenseType?.toLowerCase().replace(/\s+/g, '-');
@@ -378,7 +379,7 @@ function BeatDetailsContent() {
                                             gap: '4px'
                                         }}>
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
-                                            SUBSCRIBED • {subscriptionData?.remaining} left
+                                            SUBSCRIBED • {subscriptionData?.downloads?.remaining} left
                                         </span>
                                     )}
 
@@ -450,7 +451,7 @@ function BeatDetailsContent() {
                                 }}
                             >
                                 <DownloadIcon />
-                                {downloading ? 'DOWNLOADING...' : `FREE DOWNLOAD (${subscriptionData?.remaining} left)`}
+                                {downloading ? 'DOWNLOADING...' : `FREE DOWNLOAD (${subscriptionData?.downloads?.remaining} left)`}
                             </button>
                         ) : (
                             <button

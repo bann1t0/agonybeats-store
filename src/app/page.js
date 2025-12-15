@@ -77,7 +77,7 @@ function HomeContent() {
       fetch('/api/subscription-downloads')
         .then(res => res.ok ? res.json() : null)
         .then(data => {
-          if (data && data.hasActiveSubscription) {
+          if (data && data.hasSubscription) {
             setSubscriptionData(data);
           }
         })
@@ -85,9 +85,8 @@ function HomeContent() {
     }
   }, [session]);
 
-  // Handle subscriber free download
   async function handleSubscriberDownload(beat) {
-    if (!subscriptionData || subscriptionData.remaining <= 0) return;
+    if (!subscriptionData || (subscriptionData.downloads?.remaining === 0)) return;
 
     setDownloading(beat.id);
     try {
@@ -111,8 +110,10 @@ function HomeContent() {
         // Update remaining count
         setSubscriptionData(prev => ({
           ...prev,
-          remaining: data.remaining,
-          downloadsUsed: prev.downloadsUsed + 1
+          downloads: {
+            ...prev.downloads,
+            remaining: data.remaining
+          }
         }));
       } else {
         alert(data.error || 'Download failed');
@@ -519,7 +520,7 @@ function HomeContent() {
                       </Link>
 
                       {/* Subscriber FREE Download Button */}
-                      {subscriptionData && subscriptionData.remaining > 0 ? (
+                      {subscriptionData && subscriptionData.downloads?.remaining > 0 ? (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -562,7 +563,7 @@ function HomeContent() {
                             borderRadius: '10px',
                             marginLeft: '0.25rem'
                           }}>
-                            {subscriptionData.remaining} left
+                            {subscriptionData.downloads?.remaining} left
                           </span>
                         </button>
                       ) : (
