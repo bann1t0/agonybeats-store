@@ -576,42 +576,116 @@ export default function AdminPage() {
             <h1 className={styles.heroTitle}>Admin Dashboard</h1>
             <p style={{ marginBottom: "2rem", color: "#888" }}>Manage your cosmic sound library.</p>
 
-            {/* Navigation Tabs */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+            {/* Organized Navigation Tabs */}
+            <div style={{
+                display: 'flex',
+                gap: '0.5rem',
+                marginBottom: '2rem',
+                flexWrap: 'wrap',
+                background: 'rgba(0,0,0,0.3)',
+                padding: '1rem',
+                borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.1)'
+            }}>
                 <button
                     onClick={() => setView("beats")}
                     style={{
-                        padding: '1rem 2rem',
+                        padding: '0.8rem 1.5rem',
                         borderRadius: '8px',
                         border: 'none',
-                        background: view === "beats" ? '#0ea5e9' : '#222',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        fontSize: '1rem',
+                        background: view === "beats" ? '#0ea5e9' : 'rgba(255,255,255,0.05)',
+                        color: view === "beats" ? 'white' : '#888',
+                        fontWeight: '600',
+                        fontSize: '0.9rem',
                         cursor: 'pointer',
-                        boxShadow: view === "beats" ? '0 0 15px rgba(14, 165, 233, 0.4)' : 'none'
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        transition: 'all 0.2s'
                     }}
                 >
-                    Store Management
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" /></svg>
+                    Beats
+                </button>
+                <button
+                    onClick={() => setView("soundkits")}
+                    style={{
+                        padding: '0.8rem 1.5rem',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: view === "soundkits" ? '#8b5cf6' : 'rgba(255,255,255,0.05)',
+                        color: view === "soundkits" ? 'white' : '#888',
+                        fontWeight: '600',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    <PackageIcon />
+                    Soundkits
+                </button>
+                <button
+                    onClick={() => setView("licenses")}
+                    style={{
+                        padding: '0.8rem 1.5rem',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: view === "licenses" ? '#10b981' : 'rgba(255,255,255,0.05)',
+                        color: view === "licenses" ? 'white' : '#888',
+                        fontWeight: '600',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    <FileTextIcon />
+                    Licenses
+                </button>
+                <button
+                    onClick={() => setView("discounts")}
+                    style={{
+                        padding: '0.8rem 1.5rem',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: view === "discounts" ? '#f59e0b' : 'rgba(255,255,255,0.05)',
+                        color: view === "discounts" ? 'white' : '#888',
+                        fontWeight: '600',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    <TagIcon />
+                    Discounts
                 </button>
                 <button
                     onClick={() => { setView("newsletter"); fetchSubscribers(); }}
                     style={{
-                        padding: '1rem 2rem',
+                        padding: '0.8rem 1.5rem',
                         borderRadius: '8px',
                         border: 'none',
-                        background: view === "newsletter" ? '#d946ef' : '#222',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        fontSize: '1rem',
+                        background: view === "newsletter" ? '#d946ef' : 'rgba(255,255,255,0.05)',
+                        color: view === "newsletter" ? 'white' : '#888',
+                        fontWeight: '600',
+                        fontSize: '0.9rem',
                         cursor: 'pointer',
-                        boxShadow: view === "newsletter" ? '0 0 15px rgba(217, 70, 239, 0.4)' : 'none',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.5rem',
+                        transition: 'all 0.2s'
                     }}
                 >
-                    <MailIcon /> Newsletter
+                    <MailIcon />
+                    Newsletter
                 </button>
             </div>
 
@@ -770,13 +844,18 @@ export default function AdminPage() {
                             </div>
                         ))}
                     </div>
-                    <div className={styles.chromaticSeparator} style={{ margin: '3rem 0' }}></div>
+                </>
+            )}
 
-                    {/* --- SOUNDKIT MANAGEMENT SECTION --- */}
-                    <h2 style={{ color: 'white', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Soundkits <PackageIcon /></h2>
+            {/* ==================== SOUNDKITS VIEW ==================== */}
+            {view === "soundkits" && (
+                <>
+                    <h2 style={{ color: 'white', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <PackageIcon /> Soundkit Management
+                    </h2>
 
                     <form id="soundkitForm" onSubmit={handleSoundkitSubmit} className={styles.uploadForm}>
-                        <h3 style={{ color: 'white', marginBottom: '1rem' }}>{editingSoundkit ? "Edit Soundkit" : "Upload Soundkit"}</h3>
+                        <h3 style={{ color: 'white', marginBottom: '1rem' }}>{editingSoundkit ? "Edit Soundkit" : "Upload New Soundkit"}</h3>
 
                         <div className={styles.formGroup}>
                             <label>Title</label>
@@ -847,11 +926,15 @@ export default function AdminPage() {
                             </div>
                         ))}
                     </div>
+                </>
+            )}
 
-                    <div className={styles.chromaticSeparator} style={{ margin: '3rem 0' }}></div>
-
-                    {/* --- LICENSE MANAGEMENT SECTION --- */}
-                    <h2 style={{ color: 'white', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Global Licenses <FileTextIcon /></h2>
+            {/* ==================== LICENSES VIEW ==================== */}
+            {view === "licenses" && (
+                <>
+                    <h2 style={{ color: 'white', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FileTextIcon /> License Management
+                    </h2>
 
                     <form onSubmit={createLicense} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
@@ -925,13 +1008,17 @@ export default function AdminPage() {
                                 </div>
                             </div>
                         ))}
-                        {licenses.length === 0 && <p style={{ color: '#666' }}>No global licenses yet.</p>}
+                        {licenses.length === 0 && <p style={{ color: '#666' }}>No global licenses yet. Create your first license above!</p>}
                     </div>
+                </>
+            )}
 
-                    <div className={styles.chromaticSeparator} style={{ margin: '3rem 0' }}></div>
-
-                    {/* --- DISCOUNT MANAGEMENT SECTION --- */}
-                    <h2 style={{ color: 'white', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Discount Codes <TagIcon /></h2>
+            {/* ==================== DISCOUNTS VIEW ==================== */}
+            {view === "discounts" && (
+                <>
+                    <h2 style={{ color: 'white', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <TagIcon /> Discount Codes
+                    </h2>
 
                     <form onSubmit={createDiscount} style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
                         <div style={{ flex: 1 }}>
