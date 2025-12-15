@@ -16,32 +16,44 @@ export default function SubscriptionPlans({ currentSubscription }) {
     const [loading, setLoading] = useState(null);
 
     const handleSubscribe = async (tierId) => {
+        console.log('=== handleSubscribe called ===');
+        console.log('tierId:', tierId);
+        console.log('session:', session);
+
         if (!session) {
-            router.push('/login?redirect=/subscribe');
+            console.log('No session, redirecting to login...');
+            window.location.href = '/login?redirect=/subscribe';
             return;
         }
 
         setLoading(tierId);
         try {
+            console.log('Calling /api/subscriptions...');
             const res = await fetch('/api/subscriptions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ tierId })
             });
 
+            console.log('API response status:', res.status);
+            const data = await res.json();
+            console.log('API response data:', data);
+
             if (!res.ok) {
-                const error = await res.json();
-                throw new Error(error.error || 'Failed to create subscription');
+                throw new Error(data.error || 'Failed to create subscription');
             }
 
-            const { approvalUrl } = await res.json();
+            if (!data.approvalUrl) {
+                throw new Error('No approval URL received from PayPal');
+            }
 
+            console.log('Redirecting to PayPal:', data.approvalUrl);
             // Redirect to PayPal for approval
-            window.location.href = approvalUrl;
+            window.location.href = data.approvalUrl;
 
         } catch (error) {
             console.error('Subscription error:', error);
-            alert(error.message);
+            alert('Error: ' + error.message);
             setLoading(null);
         }
     };
