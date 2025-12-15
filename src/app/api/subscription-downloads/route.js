@@ -155,12 +155,15 @@ export async function POST(req) {
         });
 
         if (existingDownload) {
-            // Already downloaded, just return the file URL
+            // Already downloaded, just return the file URL (doesn't count as new download)
+            const remaining = getRemainingDownloads(subscription, downloadsThisMonth);
             return NextResponse.json({
                 success: true,
-                message: "You've already downloaded this beat - downloading again",
+                message: "You've already downloaded this beat - downloading again (doesn't count as new download)",
                 downloadUrl: beat.audio,
-                licenseType: tier?.benefits.licenseType || 'MP3_LEASE'
+                licenseType: tier?.benefits.licenseType || 'MP3_LEASE',
+                remaining: remaining,
+                wasReDownload: true
             });
         }
 
