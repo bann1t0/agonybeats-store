@@ -191,7 +191,11 @@ export default function SubscriptionPlans({ currentSubscription }) {
 
                         {/* Subscribe Button */}
                         <button
-                            onClick={() => handleSubscribe(tier.id)}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleSubscribe(tier.id);
+                            }}
                             disabled={isCurrentPlan || loading === tier.id}
                             style={{
                                 width: '100%',
@@ -207,19 +211,11 @@ export default function SubscriptionPlans({ currentSubscription }) {
                                 cursor: isCurrentPlan ? 'not-allowed' : 'pointer',
                                 transition: 'transform 0.2s, box-shadow 0.2s',
                                 textTransform: 'uppercase',
-                                letterSpacing: '1px'
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!isCurrentPlan && loading !== tier.id) {
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                    e.currentTarget.style.boxShadow = `0 8px 20px ${tier.color}60`;
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!isCurrentPlan) {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }
+                                letterSpacing: '1px',
+                                touchAction: 'manipulation',
+                                WebkitTapHighlightColor: 'transparent',
+                                userSelect: 'none',
+                                minHeight: '50px'
                             }}
                         >
                             {loading === tier.id
