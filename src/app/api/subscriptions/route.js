@@ -48,7 +48,21 @@ export async function POST(req) {
         if (!tier) {
             return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
         }
-        console.log('Tier found:', tier.name, 'Plan ID:', tier.paypalPlanId);
+
+        // Get Plan ID directly from env (getters may not work properly)
+        const planIdMap = {
+            'base': process.env.PAYPAL_BASE_PLAN_ID,
+            'advanced': process.env.PAYPAL_ADVANCED_PLAN_ID,
+            'special': process.env.PAYPAL_SPECIAL_PLAN_ID
+        };
+
+        const paypalPlanId = planIdMap[tierId];
+        console.log('Tier found:', tier.name);
+        console.log('Plan ID from env:', paypalPlanId);
+
+        if (!paypalPlanId) {
+            throw new Error(`PayPal Plan ID not configured for tier: ${tierId}`);
+        }
 
         // Check if user already has active subscription
         const existing = await prisma.subscription.findFirst({
@@ -86,7 +100,7 @@ export async function POST(req) {
         const surname = nameParts.slice(1).join(' ') || 'Customer';
 
         const requestBody = {
-            plan_id: tier.paypalPlanId,
+            plan_id: paypalPlanId,
             subscriber: {
                 name: {
                     given_name: givenName,
@@ -105,7 +119,7 @@ export async function POST(req) {
         };
 
         console.log('=== PayPal Request Body ===');
-        console.log('Plan ID:', tier.paypalPlanId);
+        console.log('Plan ID:', paypalPlanId);
         console.log('Subscriber:', JSON.stringify(requestBody.subscriber, null, 2));
         console.log('Full request:', JSON.stringify(requestBody, null, 2));
 
