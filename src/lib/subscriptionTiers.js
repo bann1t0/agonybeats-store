@@ -5,7 +5,7 @@ export const SUBSCRIPTION_TIERS = {
         name: 'Base',
         price: 14.99,
         currency: 'EUR',
-        paypalPlanId: process.env.PAYPAL_BASE_PLAN_ID, // To be configured in PayPal
+        get paypalPlanId() { return process.env.PAYPAL_BASE_PLAN_ID; },
         features: [
             '3 exclusive beats per month',
             'High-quality stems included',
@@ -32,7 +32,7 @@ export const SUBSCRIPTION_TIERS = {
         name: 'Advanced',
         price: 29.99,
         currency: 'EUR',
-        paypalPlanId: process.env.PAYPAL_ADVANCED_PLAN_ID,
+        get paypalPlanId() { return process.env.PAYPAL_ADVANCED_PLAN_ID; },
         features: [
             '10 exclusive beats per month',
             'Premium stems included',
@@ -60,7 +60,7 @@ export const SUBSCRIPTION_TIERS = {
         name: 'Special VIP',
         price: 99.99,
         currency: 'EUR',
-        paypalPlanId: process.env.PAYPAL_SPECIAL_PLAN_ID,
+        get paypalPlanId() { return process.env.PAYPAL_SPECIAL_PLAN_ID; },
         features: [
             'UNLIMITED beats + stems',
             'Premium/Unlimited License',
