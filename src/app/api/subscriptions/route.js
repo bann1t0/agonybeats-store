@@ -79,30 +79,43 @@ export async function POST(req) {
 
         // Create PayPal subscription
         console.log('Creating PayPal subscription...');
+
+        // Build subscriber info - PayPal requires non-empty surname
+        const nameParts = (session.user.name || 'User').split(' ');
+        const givenName = nameParts[0] || 'User';
+        const surname = nameParts.slice(1).join(' ') || 'Customer';
+
+        const requestBody = {
+            plan_id: tier.paypalPlanId,
+            subscriber: {
+                name: {
+                    given_name: givenName,
+                    surname: surname
+                },
+                email_address: session.user.email
+            },
+            application_context: {
+                brand_name: 'AgonyBeats',
+                locale: 'en-US',
+                shipping_preference: 'NO_SHIPPING',
+                user_action: 'SUBSCRIBE_NOW',
+                return_url: `${process.env.NEXTAUTH_URL}/api/subscriptions/success`,
+                cancel_url: `${process.env.NEXTAUTH_URL}/subscribe?canceled=true`
+            }
+        };
+
+        console.log('=== PayPal Request Body ===');
+        console.log('Plan ID:', tier.paypalPlanId);
+        console.log('Subscriber:', JSON.stringify(requestBody.subscriber, null, 2));
+        console.log('Full request:', JSON.stringify(requestBody, null, 2));
+
         const paypalResponse = await fetch(`${PAYPAL_API}/v1/billing/subscriptions`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                plan_id: tier.paypalPlanId,
-                subscriber: {
-                    name: {
-                        given_name: session.user.name?.split(' ')[0] || 'User',
-                        surname: session.user.name?.split(' ')[1] || ''
-                    },
-                    email_address: session.user.email
-                },
-                application_context: {
-                    brand_name: 'AgonyBeats',
-                    locale: 'en-US',
-                    shipping_preference: 'NO_SHIPPING',
-                    user_action: 'SUBSCRIBE_NOW',
-                    return_url: `${process.env.NEXTAUTH_URL}/api/subscriptions/success`,
-                    cancel_url: `${process.env.NEXTAUTH_URL}/subscribe?canceled=true`
-                }
-            })
+            body: JSON.stringify(requestBody)
         });
 
         const paypalData = await paypalResponse.json();
@@ -110,8 +123,9 @@ export async function POST(req) {
         console.log('PayPal response:', JSON.stringify(paypalData, null, 2));
 
         if (!paypalResponse.ok) {
-            console.error('PayPal error:', paypalData);
-            throw new Error(paypalData.message || JSON.stringify(paypalData));
+            console.error('PayPal error details:', JSON.stringify(paypalData, null, 2));
+            const errorMessage = paypalData.details?.[0]?.description || paypalData.message || JSON.stringify(paypalData);
+            throw new Error(errorMessage);
         }
 
         // Save pending subscription to database
