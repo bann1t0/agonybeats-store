@@ -49,28 +49,26 @@ export async function POST(req) {
             return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
         }
 
-        // Get Plan ID directly from env (getters may not work properly)
+        // Get Plan ID - hardcoded temporarily for testing (env vars not loading)
         console.log('=== DEBUG ENV VARS ===');
-        console.log('PAYPAL_BASE_PLAN_ID:', process.env.PAYPAL_BASE_PLAN_ID);
-        console.log('PAYPAL_ADVANCED_PLAN_ID:', process.env.PAYPAL_ADVANCED_PLAN_ID);
-        console.log('PAYPAL_SPECIAL_PLAN_ID:', process.env.PAYPAL_SPECIAL_PLAN_ID);
-        console.log('PAYPAL_MODE:', process.env.PAYPAL_MODE);
-        console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
+        console.log('PAYPAL_BASE_PLAN_ID from env:', process.env.PAYPAL_BASE_PLAN_ID);
+        console.log('PAYPAL_ADVANCED_PLAN_ID from env:', process.env.PAYPAL_ADVANCED_PLAN_ID);
+        console.log('PAYPAL_SPECIAL_PLAN_ID from env:', process.env.PAYPAL_SPECIAL_PLAN_ID);
 
+        // TEMPORARY: Hardcoded Plan IDs until env vars work
         const planIdMap = {
-            'base': process.env.PAYPAL_BASE_PLAN_ID,
-            'advanced': process.env.PAYPAL_ADVANCED_PLAN_ID,
-            'special': process.env.PAYPAL_SPECIAL_PLAN_ID
+            'base': process.env.PAYPAL_BASE_PLAN_ID || 'P-2TY13469GG7008428NE5RN4Q',
+            'advanced': process.env.PAYPAL_ADVANCED_PLAN_ID || 'P-9WE31665X6150735CNE5RPEI',
+            'special': process.env.PAYPAL_SPECIAL_PLAN_ID || 'P-07F348626J919554BNE5RPYA'
         };
 
         const paypalPlanId = planIdMap[tierId];
         console.log('Tier found:', tier.name);
         console.log('tierId:', tierId);
-        console.log('Plan ID from map:', paypalPlanId);
+        console.log('Plan ID being used:', paypalPlanId);
 
         if (!paypalPlanId) {
-            console.error('Available env keys (partial):', Object.keys(process.env).filter(k => k.includes('PAYPAL')));
-            throw new Error(`PayPal Plan ID not configured for tier: ${tierId}. Check Vercel env vars.`);
+            throw new Error(`Invalid tier ID: ${tierId}`);
         }
 
         // Check if user already has active subscription
