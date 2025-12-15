@@ -2,16 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { getTier, getRemainingDownloads } from '@/lib/subscriptionTiers';
+import { getTier, getRemainingDownloads, SUBSCRIPTION_TIERS } from '@/lib/subscriptionTiers';
 
 export default function SubscriptionsManagementPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [subscription, setSubscription] = useState(null);
     const [loading, setLoading] = useState(true);
     const [canceling, setCanceling] = useState(false);
+    const [upgrading, setUpgrading] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
+
+    // Check for upgrade success
+    useEffect(() => {
+        if (searchParams.get('upgraded') === 'true') {
+            setSuccessMessage(`Successfully upgraded to ${searchParams.get('tier')}!`);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -60,6 +70,50 @@ export default function SubscriptionsManagementPage() {
             alert(error.message);
         } finally {
             setCanceling(false);
+        }
+    }
+
+    async function handleUpgrade(newTierId) {
+        const newTier = getTier(newTierId);
+        const currentTier = getTier(subscription?.tierId);
+
+        const tierOrder = { 'base': 1, 'advanced': 2, 'special': 3 };
+        const isUpgrade = tierOrder[newTierId] > tierOrder[subscription?.tierId];
+
+        const confirmMsg = isUpgrade
+            ? `Upgrade to ${newTier?.name} for €${newTier?.price}/month? You'll pay the prorated difference.`
+            : `Downgrade to ${newTier?.name} for €${newTier?.price}/month? This will take effect at your next billing cycle.`;
+
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        setUpgrading(newTierId);
+        try {
+            const res = await fetch('/api/subscriptions/upgrade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newTierId })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to change plan');
+            }
+
+            if (data.requiresApproval && data.approvalUrl) {
+                // Redirect to PayPal for payment
+                window.location.href = data.approvalUrl;
+            } else {
+                // Plan changed immediately
+                setSuccessMessage(data.message);
+                fetchSubscription();
+            }
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setUpgrading(null);
         }
     }
 
@@ -256,6 +310,119 @@ export default function SubscriptionsManagementPage() {
                                     </li>
                                 ))}
                             </ul>
+                        </div>
+
+                        {/* Change Plan Section */}
+                        <div style={{
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            padding: '2rem',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            marginTop: '2rem'
+                        }}>
+                            <h3 style={{ color: 'white', marginBottom: '1.5rem' }}>Change Your Plan</h3>
+
+                            {successMessage && (
+                                <div style={{
+                                    background: 'rgba(16, 185, 129, 0.2)',
+                                    border: '1px solid #10b981',
+                                    padding: '1rem',
+                                    borderRadius: '8px',
+                                    color: '#10b981',
+                                    marginBottom: '1.5rem'
+                                }}>
+                                    ✅ {successMessage}
+                                </div>
+                            )}
+
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                gap: '1rem'
+                            }}>
+                                {SUBSCRIPTION_TIERS.map(planTier => {
+                                    const isCurrent = subscription?.tierId === planTier.id;
+                                    const tierOrder = { 'base': 1, 'advanced': 2, 'special': 3 };
+                                    const isUpgrade = tierOrder[planTier.id] > tierOrder[subscription?.tierId];
+                                    const isDowngrade = tierOrder[planTier.id] < tierOrder[subscription?.tierId];
+
+                                    return (
+                                        <div
+                                            key={planTier.id}
+                                            style={{
+                                                background: isCurrent
+                                                    ? `linear-gradient(135deg, ${planTier.color}20 0%, ${planTier.color}10 100%)`
+                                                    : 'rgba(255, 255, 255, 0.03)',
+                                                border: isCurrent
+                                                    ? `2px solid ${planTier.color}`
+                                                    : '1px solid rgba(255, 255, 255, 0.1)',
+                                                borderRadius: '12px',
+                                                padding: '1.5rem',
+                                                textAlign: 'center'
+                                            }}
+                                        >
+                                            <h4 style={{
+                                                color: planTier.color,
+                                                marginBottom: '0.5rem',
+                                                fontSize: '1.2rem'
+                                            }}>
+                                                {planTier.name}
+                                            </h4>
+                                            <p style={{
+                                                color: 'white',
+                                                fontSize: '1.5rem',
+                                                fontWeight: 'bold',
+                                                marginBottom: '0.5rem'
+                                            }}>
+                                                €{planTier.price}<span style={{ fontSize: '0.9rem', color: '#888' }}>/mo</span>
+                                            </p>
+                                            <p style={{
+                                                color: '#888',
+                                                fontSize: '0.85rem',
+                                                marginBottom: '1rem'
+                                            }}>
+                                                {planTier.benefits.beatsPerMonth === -1
+                                                    ? 'Unlimited downloads'
+                                                    : `${planTier.benefits.beatsPerMonth} downloads/mo`}
+                                            </p>
+
+                                            {isCurrent ? (
+                                                <span style={{
+                                                    display: 'inline-block',
+                                                    padding: '0.5rem 1rem',
+                                                    background: planTier.color,
+                                                    color: 'white',
+                                                    borderRadius: '6px',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.85rem'
+                                                }}>
+                                                    Current Plan
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleUpgrade(planTier.id)}
+                                                    disabled={upgrading === planTier.id}
+                                                    style={{
+                                                        padding: '0.5rem 1rem',
+                                                        background: isUpgrade ? planTier.color : 'transparent',
+                                                        border: isUpgrade ? 'none' : `1px solid ${planTier.color}`,
+                                                        color: isUpgrade ? 'white' : planTier.color,
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.85rem',
+                                                        opacity: upgrading ? 0.6 : 1
+                                                    }}
+                                                >
+                                                    {upgrading === planTier.id
+                                                        ? 'Processing...'
+                                                        : isUpgrade ? '⬆️ Upgrade' : '⬇️ Downgrade'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </>
                 )}
