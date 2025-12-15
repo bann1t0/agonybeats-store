@@ -47,6 +47,10 @@ function BeatDetailsContent() {
     const [loading, setLoading] = useState(true);
     const [selectedLicense, setSelectedLicense] = useState(null);
 
+    // Subscription state for FREE downloads
+    const [subscriptionData, setSubscriptionData] = useState(null);
+    const [downloading, setDownloading] = useState(false);
+
     const displayLicenses = React.useMemo(() => {
         if (!beat) return [];
         if (beat.licenses && beat.licenses.length > 0) {
@@ -109,6 +113,83 @@ function BeatDetailsContent() {
         }
         fetchBeat();
     }, [id]);
+
+    // Fetch subscription data
+    useEffect(() => {
+        if (session?.user) {
+            fetch('/api/subscription-downloads')
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                    if (data && data.hasActiveSubscription) {
+                        setSubscriptionData(data);
+                    }
+                })
+                .catch(console.error);
+        }
+    }, [session]);
+
+    // License type mapping for subscription tiers
+    const LICENSE_TYPE_MAP = {
+        'MP3_LEASE': ['mp3', 'mp3-lease', 'basic', 'basic-lease'],
+        'WAV_LEASE': ['wav', 'wav-lease', 'standard'],
+        'PREMIUM_UNLIMITED': ['unlimited', 'premium', 'exclusive', 'premium-unlimited']
+    };
+
+    // Check if a license matches the subscription tier
+    function isLicenseIncludedInSubscription(licenseType) {
+        if (!subscriptionData || subscriptionData.remaining <= 0) return false;
+        const tierLicenseType = subscriptionData.tier?.benefits?.licenseType;
+        if (!tierLicenseType) return false;
+
+        const normalizedLicType = licenseType?.toLowerCase().replace(/\s+/g, '-');
+        const matchingTypes = LICENSE_TYPE_MAP[tierLicenseType] || [];
+
+        // Also check for exact match or partial match
+        return matchingTypes.some(t => normalizedLicType?.includes(t)) ||
+            normalizedLicType?.includes(tierLicenseType.toLowerCase().replace('_', '-'));
+    }
+
+    // Handle subscriber free download
+    async function handleSubscriberDownload() {
+        if (!subscriptionData || subscriptionData.remaining <= 0 || !beat) return;
+
+        setDownloading(true);
+        try {
+            const res = await fetch('/api/subscription-downloads', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ beatId: beat.id })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.downloadUrl) {
+                // Trigger download
+                const link = document.createElement('a');
+                link.href = data.downloadUrl;
+                link.download = `${beat.title}.mp3`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showToast(`Download started! ${data.remaining} downloads remaining.`, 'success');
+
+                // Update remaining count
+                setSubscriptionData(prev => ({
+                    ...prev,
+                    remaining: data.remaining,
+                    downloadsUsed: prev.downloadsUsed + 1
+                }));
+            } else {
+                showToast(data.error || 'Download failed', 'error');
+            }
+        } catch (error) {
+            console.error('Download error:', error);
+            showToast('Download failed', 'error');
+        } finally {
+            setDownloading(false);
+        }
+    }
 
     const handleAddToCart = () => {
         if (!beat || !selectedLicense) {
@@ -256,45 +337,130 @@ function BeatDetailsContent() {
 
                         <h2 className={styles.licenseTitle}>Select a License</h2>
 
-                        {displayLicenses.map((lic) => (
-                            <div
-                                key={lic.id || lic.type}
-                                className={`${styles.licenseOption} ${selectedLicense?.type === lic.type ? styles.selectedLicense : ''} ${(lic.title.toLowerCase().includes('exclusive') || Number(lic.price) > 99) ? styles.exclusiveOpt : ''}`}
-                                style={lic.isRecommended ? {
-                                    boxShadow: '0 0 15px rgba(217, 70, 239, 0.4)',
-                                    border: '1px solid var(--neon-purple)',
-                                    position: 'relative',
-                                    overflow: 'visible' // Allow badge to stick out if needed
-                                } : {}}
-                                onClick={() => setSelectedLicense(lic)}
-                            >
-                                {lic.isRecommended && (
-                                    <span style={{
-                                        position: 'absolute',
-                                        top: '-10px',
-                                        right: '10px',
-                                        background: 'var(--neon-purple)',
-                                        color: 'white',
-                                        fontSize: '0.6rem',
-                                        fontWeight: 'bold',
-                                        padding: '2px 6px',
-                                        borderRadius: '4px',
-                                        textTransform: 'uppercase',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
-                                    }}>Best Value</span>
-                                )}
-                                <span className={styles.licName}>{lic.title}</span>
-                                <span className={styles.licPrice}>${lic.price != null ? Number(lic.price).toFixed(2) : '0.00'}</span>
-                            </div>
-                        ))}
+                        {displayLicenses.map((lic) => {
+                            const isFreeForSubscriber = isLicenseIncludedInSubscription(lic.type || lic.title);
 
-                        <button
-                            className={`${styles.addToCartBtn} ${!selectedLicense ? styles.disabledBtn : ''}`}
-                            disabled={!selectedLicense}
-                            onClick={handleAddToCart}
-                        >
-                            {selectedLicense ? `ADD TO CART - $${selectedLicense.price}` : "SELECT A LICENSE"}
-                        </button>
+                            return (
+                                <div
+                                    key={lic.id || lic.type}
+                                    className={`${styles.licenseOption} ${selectedLicense?.type === lic.type ? styles.selectedLicense : ''} ${(lic.title.toLowerCase().includes('exclusive') || Number(lic.price) > 99) ? styles.exclusiveOpt : ''}`}
+                                    style={{
+                                        ...(lic.isRecommended ? {
+                                            boxShadow: '0 0 15px rgba(217, 70, 239, 0.4)',
+                                            border: '1px solid var(--neon-purple)',
+                                            position: 'relative',
+                                            overflow: 'visible'
+                                        } : {}),
+                                        ...(isFreeForSubscriber ? {
+                                            boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)',
+                                            border: '2px solid #10b981',
+                                            background: 'rgba(16, 185, 129, 0.1)'
+                                        } : {})
+                                    }}
+                                    onClick={() => setSelectedLicense(lic)}
+                                >
+                                    {/* Subscriber FREE Badge */}
+                                    {isFreeForSubscriber && (
+                                        <span style={{
+                                            position: 'absolute',
+                                            top: '-12px',
+                                            left: '10px',
+                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                            color: 'white',
+                                            fontSize: '0.65rem',
+                                            fontWeight: 'bold',
+                                            padding: '3px 8px',
+                                            borderRadius: '4px',
+                                            textTransform: 'uppercase',
+                                            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.5)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px'
+                                        }}>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
+                                            SUBSCRIBED • {subscriptionData?.remaining} left
+                                        </span>
+                                    )}
+
+                                    {lic.isRecommended && !isFreeForSubscriber && (
+                                        <span style={{
+                                            position: 'absolute',
+                                            top: '-10px',
+                                            right: '10px',
+                                            background: 'var(--neon-purple)',
+                                            color: 'white',
+                                            fontSize: '0.6rem',
+                                            fontWeight: 'bold',
+                                            padding: '2px 6px',
+                                            borderRadius: '4px',
+                                            textTransform: 'uppercase',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                                        }}>Best Value</span>
+                                    )}
+
+                                    <span className={styles.licName}>{lic.title}</span>
+
+                                    {isFreeForSubscriber ? (
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <span style={{
+                                                textDecoration: 'line-through',
+                                                color: '#666',
+                                                fontSize: '0.9rem'
+                                            }}>
+                                                ${lic.price != null ? Number(lic.price).toFixed(2) : '0.00'}
+                                            </span>
+                                            <span style={{
+                                                color: '#10b981',
+                                                fontWeight: 'bold',
+                                                fontSize: '1.1rem',
+                                                textShadow: '0 0 10px rgba(16, 185, 129, 0.5)'
+                                            }}>
+                                                FREE
+                                            </span>
+                                        </span>
+                                    ) : (
+                                        <span className={styles.licPrice}>${lic.price != null ? Number(lic.price).toFixed(2) : '0.00'}</span>
+                                    )}
+                                </div>
+                            );
+                        })}
+
+                        {/* Subscriber Download Button - shows when FREE license is selected */}
+                        {selectedLicense && isLicenseIncludedInSubscription(selectedLicense.type || selectedLicense.title) ? (
+                            <button
+                                onClick={handleSubscriberDownload}
+                                disabled={downloading}
+                                style={{
+                                    width: '100%',
+                                    padding: '1rem',
+                                    marginTop: '2rem',
+                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontSize: '1.1rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.5rem',
+                                    transition: 'all 0.3s'
+                                }}
+                            >
+                                <DownloadIcon />
+                                {downloading ? 'DOWNLOADING...' : `FREE DOWNLOAD (${subscriptionData?.remaining} left)`}
+                            </button>
+                        ) : (
+                            <button
+                                className={`${styles.addToCartBtn} ${!selectedLicense ? styles.disabledBtn : ''}`}
+                                disabled={!selectedLicense}
+                                onClick={handleAddToCart}
+                            >
+                                {selectedLicense ? `ADD TO CART - $${selectedLicense.price}` : "SELECT A LICENSE"}
+                            </button>
+                        )}
 
                         {selectedLicense && !beat.stems && selectedLicense.features && selectedLicense.features.toLowerCase().includes('stem') && (
                             <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
@@ -321,24 +487,26 @@ function BeatDetailsContent() {
                     </div>
                 </div>
 
-                {similarBeats.length > 0 && (
-                    <div className={styles.similarSection}>
-                        <h3 className={styles.similarTitle}>Similar Vibes <StarsIcon /></h3>
-                        <div className={styles.similarGrid}>
-                            {similarBeats.map(sim => (
-                                <Link key={sim.id} href={`/beats/${sim.id}`} className={styles.similarCard}>
-                                    <img src={sim.cover} alt={sim.title} className={styles.similarCover} />
-                                    <div className={styles.similarInfo}>
-                                        <h4>{sim.title}</h4>
-                                        <span>{sim.bpm} BPM • {sim.key}</span>
-                                    </div>
-                                </Link>
-                            ))}
+                {
+                    similarBeats.length > 0 && (
+                        <div className={styles.similarSection}>
+                            <h3 className={styles.similarTitle}>Similar Vibes <StarsIcon /></h3>
+                            <div className={styles.similarGrid}>
+                                {similarBeats.map(sim => (
+                                    <Link key={sim.id} href={`/beats/${sim.id}`} className={styles.similarCard}>
+                                        <img src={sim.cover} alt={sim.title} className={styles.similarCover} />
+                                        <div className={styles.similarInfo}>
+                                            <h4>{sim.title}</h4>
+                                            <span>{sim.bpm} BPM • {sim.key}</span>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                )}
-            </main>
-        </div>
+                    )
+                }
+            </main >
+        </div >
     );
 }
 
