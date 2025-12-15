@@ -64,30 +64,60 @@ export default function AdminPage() {
 
     // Fetch beats on load
     async function fetchBeats() {
-        const res = await fetch("/api/beats");
-        if (res.ok) {
-            setBeats(await res.json());
+        try {
+            const res = await fetch("/api/beats");
+            if (res.ok) {
+                const data = await res.json();
+                setBeats(data);
+            } else {
+                console.error('Failed to fetch beats:', res.status, res.statusText);
+                setMessage(`Error loading beats: ${res.statusText}`);
+            }
+        } catch (error) {
+            console.error('Fetch beats error:', error);
+            setMessage('Error loading beats. Please refresh the page.');
         }
     }
 
     async function fetchSoundkits() {
-        const res = await fetch("/api/soundkits");
-        if (res.ok) {
-            setSoundkits(await res.json());
+        try {
+            const res = await fetch("/api/soundkits");
+            if (res.ok) {
+                const data = await res.json();
+                setSoundkits(data);
+            } else {
+                console.error('Failed to fetch soundkits:', res.status);
+            }
+        } catch (error) {
+            console.error('Fetch soundkits error:', error);
         }
     }
 
     async function fetchLicenses() {
-        const res = await fetch("/api/licenses");
-        if (res.ok) {
-            setLicenses(await res.json());
+        try {
+            const res = await fetch("/api/licenses");
+            if (res.ok) {
+                const data = await res.json();
+                setLicenses(data);
+            } else {
+                console.error('Failed to fetch licenses:', res.status);
+            }
+        } catch (error) {
+            console.error('Fetch licenses error:', error);
         }
     }
 
     async function fetchSubscribers() {
-        const res = await fetch("/api/newsletter");
-        if (res.ok) {
-            setSubscribers(await res.json());
+        try {
+            const res = await fetch("/api/newsletter");
+            if (res.ok) {
+                const data = await res.json();
+                setSubscribers(data);
+            } else {
+                console.error('Failed to fetch subscribers:', res.status);
+            }
+        } catch (error) {
+            console.error('Fetch subscribers error:', error);
         }
     }
 
