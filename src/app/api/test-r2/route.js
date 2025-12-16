@@ -1,23 +1,37 @@
 import { NextResponse } from "next/server";
+import { uploadToR2 } from "@/lib/r2-storage";
 
-// Test endpoint to verify R2 configuration on Vercel
+// Test endpoint to verify R2 upload works
 export async function GET() {
-    const config = {
-        hasEndpoint: !!process.env.R2_ENDPOINT,
-        hasAccessKey: !!process.env.R2_ACCESS_KEY_ID,
-        hasSecretKey: !!process.env.R2_SECRET_ACCESS_KEY,
-        hasBucket: !!process.env.R2_BUCKET_NAME,
-        hasPublicUrl: !!process.env.R2_PUBLIC_URL,
-        bucketName: process.env.R2_BUCKET_NAME || 'NOT SET',
-        endpointPrefix: process.env.R2_ENDPOINT?.substring(0, 30) + '...' || 'NOT SET',
-        publicUrlPrefix: process.env.R2_PUBLIC_URL?.substring(0, 40) + '...' || 'NOT SET',
-    };
+    try {
+        // Create a small test file
+        const testContent = "Test upload at " + new Date().toISOString();
+        const testBuffer = Buffer.from(testContent, 'utf-8');
 
-    const allConfigured = config.hasEndpoint && config.hasAccessKey &&
-        config.hasSecretKey && config.hasBucket && config.hasPublicUrl;
+        console.log("Starting test upload to R2...");
 
-    return NextResponse.json({
-        status: allConfigured ? 'OK' : 'MISSING_CONFIG',
-        config
-    });
+        const url = await uploadToR2(
+            testBuffer,
+            `test-${Date.now()}.txt`,
+            'uploads',
+            'text/plain'
+        );
+
+        return NextResponse.json({
+            status: 'UPLOAD_SUCCESS',
+            message: 'Test file uploaded successfully!',
+            url: url
+        });
+    } catch (error) {
+        console.error("Test upload failed:", error);
+        return NextResponse.json({
+            status: 'UPLOAD_FAILED',
+            error: error.message,
+            details: {
+                name: error.name,
+                code: error.Code || error.code,
+                statusCode: error.$metadata?.httpStatusCode
+            }
+        }, { status: 500 });
+    }
 }
