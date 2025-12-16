@@ -64,7 +64,7 @@ export default function AboutPage() {
             {/* Contact CTA */}
             <div style={{ textAlign: 'center', marginTop: '4rem' }}>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#fff' }}>Ready to work?</h3>
-                <a href="mailto:contact@agonybeats.com" style={{
+                <a href="mailto:andreadelfoco5@gmail.com" style={{
                     display: 'inline-block',
                     padding: '1rem 2.5rem',
                     background: 'var(--neon-blue)',
