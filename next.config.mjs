@@ -25,11 +25,19 @@ const nextConfig = {
   /* Strict Mode */
   reactStrictMode: true,
 
-  /* Remove console.log in production */
+  /* Keep console.log for debugging - important for production issues */
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn'],  // Keep console.error and console.warn
-    } : false,
+    removeConsole: false,
+  },
+
+  /* Server external packages for AWS SDK */
+  serverExternalPackages: ['@aws-sdk/client-s3'],
+
+  /* Experimental features for large file uploads */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '50mb',
+    },
   },
 
   /* Turbopack Configuration (Next.js 16+) */
@@ -39,3 +47,4 @@ const nextConfig = {
 };
 
 export default nextConfig;
+
