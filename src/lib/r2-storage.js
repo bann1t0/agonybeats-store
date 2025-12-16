@@ -22,6 +22,17 @@ const BUCKET_NAME = process.env.R2_BUCKET_NAME;
  */
 export async function uploadToR2(fileBuffer, filename, folder = 'uploads', contentType = 'application/octet-stream') {
     try {
+        // Log configuration for debugging
+        console.log('R2 Upload attempt:', {
+            bucket: BUCKET_NAME,
+            folder,
+            filename,
+            contentType,
+            hasEndpoint: !!process.env.R2_ENDPOINT,
+            hasAccessKey: !!process.env.R2_ACCESS_KEY_ID,
+            hasSecretKey: !!process.env.R2_SECRET_ACCESS_KEY
+        });
+
         const key = `${folder}/${filename}`;
 
         const command = new PutObjectCommand({
@@ -40,7 +51,13 @@ export async function uploadToR2(fileBuffer, filename, folder = 'uploads', conte
         return publicUrl;
 
     } catch (error) {
-        console.error("❌ R2 Upload Error:", error);
+        console.error("❌ R2 Upload Error Details:", {
+            message: error.message,
+            name: error.name,
+            code: error.Code || error.code,
+            statusCode: error.$metadata?.httpStatusCode,
+            requestId: error.$metadata?.requestId
+        });
         throw new Error(`Failed to upload to R2: ${error.message}`);
     }
 }
