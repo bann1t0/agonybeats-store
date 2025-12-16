@@ -62,6 +62,42 @@ export default function AdminPage() {
     const FileTextIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>;
     const SendIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>;
 
+    // Upload file directly to R2 using presigned URL (bypasses Vercel 4.5MB limit)
+    async function uploadFileDirect(file) {
+        if (!file || file.size === 0) return null;
+
+        // Get content type from file
+        const contentType = file.type || 'application/octet-stream';
+
+        // 1. Get presigned URL from our API
+        const urlRes = await fetch('/api/get-upload-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: file.name, contentType })
+        });
+
+        if (!urlRes.ok) {
+            const err = await urlRes.json();
+            throw new Error(err.error || 'Failed to get upload URL');
+        }
+
+        const { presignedUrl, publicUrl } = await urlRes.json();
+
+        // 2. Upload file directly to R2 using presigned URL
+        const uploadRes = await fetch(presignedUrl, {
+            method: 'PUT',
+            body: file,
+            headers: { 'Content-Type': contentType }
+        });
+
+        if (!uploadRes.ok) {
+            throw new Error(`Upload failed: ${uploadRes.status} ${uploadRes.statusText}`);
+        }
+
+        // 3. Return the public URL where file is now accessible
+        return publicUrl;
+    }
+
     // Fetch beats on load
     async function fetchBeats() {
         try {
@@ -231,60 +267,39 @@ export default function AdminPage() {
             let wavPath = editingBeat?.wav;
             let stemsPath = editingBeat?.stems;
 
-            // 1. Upload Cover (only if new file selected)
+            // 1. Upload Cover (only if new file selected) - DIRECT TO R2
             const coverFile = formData.get("cover");
             if (coverFile && coverFile.size > 0) {
-                const coverData = new FormData();
-                coverData.append("file", coverFile);
-                const coverRes = await fetch("/api/upload", { method: "POST", body: coverData });
-                const coverJson = await coverRes.json();
-                if (coverJson.error) throw new Error(coverJson.error);
-                coverPath = coverJson.path;
+                setMessage("Uploading cover image...");
+                coverPath = await uploadFileDirect(coverFile);
             }
 
-            // 2. Upload Audio (only if new file selected)
+            // 2. Upload Audio (only if new file selected) - DIRECT TO R2
             const audioFile = formData.get("audio");
             if (audioFile && audioFile.size > 0) {
-                const audioData = new FormData();
-                audioData.append("file", audioFile);
-                const audioRes = await fetch("/api/upload", { method: "POST", body: audioData });
-                const audioJson = await audioRes.json();
-                if (audioJson.error) throw new Error(audioJson.error);
-                audioPath = audioJson.path;
+                setMessage("Uploading audio file...");
+                audioPath = await uploadFileDirect(audioFile);
             }
 
-            // 3. Upload Tagged Audio (optional)
+            // 3. Upload Tagged Audio (optional) - DIRECT TO R2
             const taggedFile = formData.get("taggedAudio");
             if (taggedFile && taggedFile.size > 0) {
-                const taggedData = new FormData();
-                taggedData.append("file", taggedFile);
-                const taggedRes = await fetch("/api/upload", { method: "POST", body: taggedData });
-                const taggedJson = await taggedRes.json();
-                if (taggedJson.error) throw new Error(taggedJson.error);
-                taggedAudioPath = taggedJson.path;
-                taggedAudioPath = taggedJson.path;
+                setMessage("Uploading tagged audio...");
+                taggedAudioPath = await uploadFileDirect(taggedFile);
             }
 
-            // 4. Upload WAV (optional)
+            // 4. Upload WAV (optional) - DIRECT TO R2
             const wavFile = formData.get("wav");
             if (wavFile && wavFile.size > 0) {
-                const wavData = new FormData();
-                wavData.append("file", wavFile);
-                const wavRes = await fetch("/api/upload", { method: "POST", body: wavData });
-                const wavJson = await wavRes.json();
-                if (wavJson.error) throw new Error(wavJson.error);
-                wavPath = wavJson.path;
+                setMessage("Uploading WAV file...");
+                wavPath = await uploadFileDirect(wavFile);
             }
 
-            // 5. Upload Stems (optional)
+            // 5. Upload Stems (optional) - DIRECT TO R2
             const stemsFile = formData.get("stems");
             if (stemsFile && stemsFile.size > 0) {
-                const stemsData = new FormData();
-                stemsData.append("file", stemsFile);
-                const stemsRes = await fetch("/api/upload", { method: "POST", body: stemsData });
-                const stemsJson = await stemsRes.json();
-                if (stemsJson.error) throw new Error(stemsJson.error);
-                stemsPath = stemsJson.path;
+                setMessage("Uploading stems...");
+                stemsPath = await uploadFileDirect(stemsFile);
             }
 
             // 3. Create OR Update Beat Entry
