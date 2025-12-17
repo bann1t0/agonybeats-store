@@ -412,7 +412,7 @@ export default function CheckoutPage() {
                             />
                         </div>
 
-                        {/* Payment Method - PayPal Only */}
+                        {/* Payment Method */}
                         <div style={{ marginTop: '2rem', marginBottom: '1.5rem' }}>
                             <label style={{ display: 'block', color: '#ccc', marginBottom: '0.75rem', fontWeight: 'bold' }}>Payment Method</label>
                             <div style={{
@@ -422,11 +422,14 @@ export default function CheckoutPage() {
                                 borderRadius: '8px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem'
+                                gap: '0.75rem'
                             }}>
-                                <span style={{ fontSize: '1.5rem' }}>🅿️</span>
-                                <span style={{ color: 'white', fontWeight: 'bold' }}>PayPal</span>
-                                <span style={{ color: '#888', marginLeft: 'auto', fontSize: '0.85rem' }}>Credit/Debit Cards Accepted</span>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                                    <line x1="1" y1="10" x2="23" y2="10" />
+                                </svg>
+                                <span style={{ color: 'white', fontWeight: 'bold' }}>Credit/Debit Card</span>
+                                <span style={{ color: '#888', marginLeft: 'auto', fontSize: '0.85rem' }}>via PayPal</span>
                             </div>
                         </div>
 

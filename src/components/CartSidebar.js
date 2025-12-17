@@ -16,6 +16,13 @@ export default function CartSidebar() {
     const total = subtotal - discountAmount;
 
     const applyDiscount = async () => {
+        // Prevent stacking - if discount already applied
+        if (discount > 0) {
+            setPromoMessage("Only one code allowed. Go to checkout to change.");
+            setPromoStatus("error");
+            return;
+        }
+
         try {
             const res = await fetch("/api/discounts/verify", {
                 method: "POST",
