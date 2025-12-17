@@ -6,6 +6,8 @@ export default function NewsletterPopup() {
     const [isVisible, setIsVisible] = useState(false);
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState("idle"); // idle, submitted, success
+    const [discountCode, setDiscountCode] = useState("");
+    const [discountPercent, setDiscountPercent] = useState(30);
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -20,18 +22,42 @@ export default function NewsletterPopup() {
         }
     }, []);
 
-    const handleSubscribe = (e) => {
+    const handleSubscribe = async (e) => {
         e.preventDefault();
-        if (!email.includes('@')) return; // Basic validation
+        if (!email.includes('@')) return;
 
         setStatus("submitted");
 
-        // Simulate API call
-        setTimeout(() => {
-            localStorage.setItem("newsletter_subscribed", "true");
-            setStatus("success");
-            showToast("Welcome to the cosmos!", "success");
-        }, 1500);
+        try {
+            const res = await fetch('/api/newsletter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await res.json();
+
+            if (data.discountCode) {
+                setDiscountCode(data.discountCode);
+                setDiscountPercent(data.percentage || 30);
+                localStorage.setItem("newsletter_subscribed", "true");
+                localStorage.setItem("newsletter_discount", data.discountCode);
+                setStatus("success");
+                showToast("Welcome to the cosmos!", "success");
+            } else {
+                // Already subscribed - check for existing code
+                if (data.discountCode) {
+                    setDiscountCode(data.discountCode);
+                }
+                localStorage.setItem("newsletter_subscribed", "true");
+                setStatus("success");
+                showToast(data.message || "Welcome back!", "info");
+            }
+        } catch (error) {
+            console.error("Newsletter error:", error);
+            showToast("Something went wrong. Please try again.", "error");
+            setStatus("idle");
+        }
     };
 
     const closePopup = () => {
@@ -164,11 +190,12 @@ export default function NewsletterPopup() {
                         {status === "success" ? (
                             <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s' }}>
                                 <h2 style={titleSuccessStyle}>WELCOME ABOARD! 🚀</h2>
-                                <p style={{ color: '#ccc', marginBottom: '1rem' }}>Here is your exclusive 30% OFF code:</p>
-                                <div style={codeBoxStyle} onClick={() => { navigator.clipboard.writeText("COSMOS30"); showToast("Code copied!", "info") }}>
-                                    COSMOS30
+                                <p style={{ color: '#ccc', marginBottom: '1rem' }}>Here is your exclusive {discountPercent}% OFF code:</p>
+                                <div style={codeBoxStyle} onClick={() => { navigator.clipboard.writeText(discountCode); showToast("Code copied!", "info") }}>
+                                    {discountCode || "LOADING..."}
                                     <span style={{ display: 'block', fontSize: '0.7rem', color: '#06b6d4', marginTop: '0.5rem' }}>(Click to Copy)</span>
                                 </div>
+                                <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '1rem' }}>⚠️ One-time use only - save it!</p>
                                 <button onClick={closePopup} style={ctaButtonStyle}>START SHOPPING</button>
                             </div>
                         ) : (

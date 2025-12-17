@@ -74,13 +74,14 @@ export function CartProvider({ children }) {
 
         // 2. Coupon Logic
         if (appliedCoupon) {
-            if (appliedCoupon.code === 'COSMOS30') {
-                couponDiscount = totalAfterBundle * 0.30;
-            } else if (appliedCoupon.code === 'TEST100') {
+            if (appliedCoupon.code === 'TEST100') {
                 couponDiscount = totalAfterBundle; // 100% OFF
             } else if (appliedCoupon.code === 'TEST_PAYPAL') {
                 // Reduces total to $0.01 to test real payment flow
                 couponDiscount = Math.max(0, totalAfterBundle - 0.01);
+            } else if (appliedCoupon.percentage) {
+                // Dynamic percentage from database
+                couponDiscount = totalAfterBundle * (appliedCoupon.percentage / 100);
             }
         }
 

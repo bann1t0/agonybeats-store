@@ -67,20 +67,35 @@ export default function CheckoutPage() {
     const subscriptionDiscountAmount = (cartTotal * subscriptionDiscount) / 100;
     const finalTotal = Math.max(0, cartTotal - subscriptionDiscountAmount);
 
-    const handleApplyCoupon = () => {
-        const code = couponInput.toUpperCase();
-        if (code === 'COSMOS30') {
-            setAppliedCoupon({ code: 'COSMOS30' });
-            setLocalCouponMsg("Coupon Applied! 🎉");
-        } else if (code === 'TEST100') {
+    const handleApplyCoupon = async () => {
+        const code = couponInput.toUpperCase().trim();
+
+        // Keep test codes for development
+        if (code === 'TEST100') {
             setAppliedCoupon({ code: 'TEST100' });
             setLocalCouponMsg("Test Mode: 100% OFF Activated! 🛠️");
+            return;
         } else if (code === 'TEST_PAYPAL') {
             setAppliedCoupon({ code: 'TEST_PAYPAL' });
             setLocalCouponMsg("Test Mode: Price set to $0.01 for Real Payment Test! 💳");
-        } else {
-            setLocalCouponMsg("Invalid Coupon Code ❌");
-            setAppliedCoupon(null);
+            return;
+        }
+
+        // Validate code via API
+        try {
+            const res = await fetch(`/api/discounts/validate?code=${encodeURIComponent(code)}&email=${encodeURIComponent(userEmail)}`);
+            const data = await res.json();
+
+            if (res.ok && data.valid) {
+                setAppliedCoupon({ code: data.code, id: data.id, percentage: data.percentage });
+                setLocalCouponMsg(`Coupon Applied! ${data.percentage}% OFF 🎉`);
+            } else {
+                setLocalCouponMsg(data.error || "Invalid Coupon Code ❌");
+                setAppliedCoupon(null);
+            }
+        } catch (error) {
+            console.error("Coupon validation error:", error);
+            setLocalCouponMsg("Error validating code. Try again.");
         }
     };
 
@@ -89,7 +104,13 @@ export default function CheckoutPage() {
             const res = await fetch("/api/orders", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ cart, email: userEmail, name: userName, total: finalTotal }) // Send Name
+                body: JSON.stringify({
+                    cart,
+                    email: userEmail,
+                    name: userName,
+                    total: finalTotal,
+                    discountCodeId: appliedCoupon?.id || null
+                })
             });
             const data = await res.json();
             if (res.ok) {

@@ -97,6 +97,8 @@ model DiscountCode {
   code         String   @unique
   percentage   Int      // e.g. 20 for 20%
   uses         Int      @default(0)
+  maxUses      Int      @default(0)    // 0 = unlimited, 1 = one-time use
+  email        String?                 // If set, only this email can use it
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
 }

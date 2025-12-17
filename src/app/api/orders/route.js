@@ -9,7 +9,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req) {
     try {
-        const { cart, email, name, total } = await req.json();
+        const { cart, email, name, total, discountCodeId } = await req.json();
 
         if (!cart || !Array.isArray(cart) || cart.length === 0) {
             return NextResponse.json({ error: "Invalid order data" }, { status: 400 });
@@ -18,6 +18,19 @@ export async function POST(req) {
         // Get user session to link purchase to user
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
+
+        // Mark discount code as used (increment uses counter)
+        if (discountCodeId) {
+            try {
+                await prisma.discountCode.update({
+                    where: { id: discountCodeId },
+                    data: { uses: { increment: 1 } }
+                });
+                console.log('✅ Discount code uses incremented:', discountCodeId);
+            } catch (dcError) {
+                console.error('❌ Failed to update discount code:', dcError);
+            }
+        }
 
         const deliveredFiles = [];
         const createdPurchases = [];
