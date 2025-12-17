@@ -6,7 +6,7 @@ import Navigation from "@/components/Navigation";
 import CartSidebar from "@/components/CartSidebar";
 import StickyPlayer from "@/components/StickyPlayer";
 import Footer from "@/components/Footer";
-import NewsletterPopup from "@/components/NewsletterPopup";
+// import NewsletterPopup from "@/components/NewsletterPopup"; // Removed - discount now on registration
 // import AffiliateTracker from "@/components/AffiliateTracker";
 
 const geistSans = Geist({
@@ -128,7 +128,7 @@ export default function RootLayout({ children }) {
           </Suspense> */}
           <Navigation />
           <CartSidebar />
-          <NewsletterPopup />
+          {/* NewsletterPopup removed - discount code shown on registration */}
           {children}
           <Footer />
           <StickyPlayer />
