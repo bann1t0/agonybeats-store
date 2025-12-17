@@ -66,7 +66,7 @@ export default function CartSidebar() {
                                         {item.licenseTitle && <span>{item.licenseTitle}</span>}
                                         <span>${item.price.toFixed(2)}</span>
                                     </div>
-                                    <button onClick={() => removeFromCart(item.id)} className={styles.removeButton}>×</button>
+                                    <button onClick={() => removeFromCart(item.id, item.licenseType)} className={styles.removeButton}>×</button>
                                 </div>
                             ))}
                         </div>

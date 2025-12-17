@@ -40,9 +40,9 @@ export function CartProvider({ children }) {
         showToast(`${item.title} added to cart!`, "success");
     };
 
-    const removeFromCart = (id) => {
-        setCart(cart.filter((item) => item.id !== id));
-        showToast("Item removed from cart.", "error"); // Optional: Notification on remove
+    const removeFromCart = (id, licenseType) => {
+        setCart(cart.filter((item) => !(item.id === id && item.licenseType === licenseType)));
+        showToast("Item removed from cart.", "error");
     };
 
     const clearCart = () => {
