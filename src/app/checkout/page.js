@@ -16,7 +16,7 @@ export default function CheckoutPage() {
     const { data: session } = useSession();
     const [userEmail, setUserEmail] = useState("");
     const [userName, setUserName] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState("paypal"); // Default to PayPal
+    const [paymentMethod, setPaymentMethod] = useState("stripe"); // Default to Stripe
     const [processing, setProcessing] = useState(false);
 
     // Subscription discount state
@@ -412,24 +412,65 @@ export default function CheckoutPage() {
                             />
                         </div>
 
-                        {/* Payment Method */}
+                        {/* Payment Method Selector */}
                         <div style={{ marginTop: '2rem', marginBottom: '1.5rem' }}>
                             <label style={{ display: 'block', color: '#ccc', marginBottom: '0.75rem', fontWeight: 'bold' }}>Payment Method</label>
-                            <div style={{
-                                padding: '1rem',
-                                background: 'rgba(255,255,255,0.05)',
-                                border: '2px solid #0ea5e9',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.75rem'
-                            }}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2">
-                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                                    <line x1="1" y1="10" x2="23" y2="10" />
-                                </svg>
-                                <span style={{ color: 'white', fontWeight: 'bold' }}>Credit/Debit Card</span>
-                                <span style={{ color: '#888', marginLeft: 'auto', fontSize: '0.85rem' }}>via PayPal</span>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentMethod('stripe')}
+                                    style={{
+                                        flex: 1,
+                                        padding: '1rem',
+                                        background: paymentMethod === 'stripe'
+                                            ? 'linear-gradient(135deg, #635bff, #4f46e5)'
+                                            : 'rgba(255,255,255,0.05)',
+                                        border: paymentMethod === 'stripe'
+                                            ? '2px solid #635bff'
+                                            : '1px solid rgba(255,255,255,0.2)',
+                                        borderRadius: '8px',
+                                        color: 'white',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.5rem',
+                                        fontWeight: paymentMethod === 'stripe' ? 'bold' : 'normal'
+                                    }}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                                        <line x1="1" y1="10" x2="23" y2="10" />
+                                    </svg>
+                                    Credit Card
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentMethod('paypal')}
+                                    style={{
+                                        flex: 1,
+                                        padding: '1rem',
+                                        background: paymentMethod === 'paypal'
+                                            ? 'linear-gradient(135deg, #0070ba, #003087)'
+                                            : 'rgba(255,255,255,0.05)',
+                                        border: paymentMethod === 'paypal'
+                                            ? '2px solid #0070ba'
+                                            : '1px solid rgba(255,255,255,0.2)',
+                                        borderRadius: '8px',
+                                        color: 'white',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.5rem',
+                                        fontWeight: paymentMethod === 'paypal' ? 'bold' : 'normal'
+                                    }}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z" />
+                                    </svg>
+                                    PayPal
+                                </button>
                             </div>
                         </div>
 
@@ -449,32 +490,77 @@ export default function CheckoutPage() {
                             </div>
                         ) : userEmail && userEmail.includes("@") ? (
                             <div style={{ marginTop: '2rem' }}>
-                                {/* PayPal Payment */}
-                                <PayPalButtons
-                                    style={{ layout: "vertical", shape: "rect", color: "gold" }}
-                                    createOrder={(data, actions) => {
-                                        return actions.order.create({
-                                            purchase_units: [
-                                                {
-                                                    amount: {
-                                                        value: finalTotal.toFixed(2),
+                                {paymentMethod === 'stripe' ? (
+                                    /* Stripe Payment Button */
+                                    <button
+                                        onClick={async () => {
+                                            setProcessing(true);
+                                            try {
+                                                const res = await fetch('/api/stripe/create-payment', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        cart,
+                                                        email: userEmail,
+                                                        name: userName
+                                                    })
+                                                });
+                                                const data = await res.json();
+
+                                                if (res.ok && data.url) {
+                                                    window.location.href = data.url;
+                                                } else {
+                                                    throw new Error(data.error || 'Failed to create checkout');
+                                                }
+                                            } catch (error) {
+                                                console.error('Stripe error:', error);
+                                                alert('Error: ' + error.message);
+                                                setProcessing(false);
+                                            }
+                                        }}
+                                        disabled={processing}
+                                        style={{
+                                            width: '100%',
+                                            padding: '1rem 2rem',
+                                            fontSize: '1.1rem',
+                                            fontWeight: 'bold',
+                                            background: 'linear-gradient(135deg, #635bff, #4f46e5)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            cursor: processing ? 'not-allowed' : 'pointer',
+                                            opacity: processing ? 0.7 : 1
+                                        }}
+                                    >
+                                        {processing ? 'Processing...' : `Pay €${finalTotal.toFixed(2)} with Card`}
+                                    </button>
+                                ) : (
+                                    /* PayPal Payment */
+                                    <PayPalButtons
+                                        style={{ layout: "vertical", shape: "rect", color: "gold" }}
+                                        createOrder={(data, actions) => {
+                                            return actions.order.create({
+                                                purchase_units: [
+                                                    {
+                                                        amount: {
+                                                            value: finalTotal.toFixed(2),
+                                                        },
+                                                        description: `AgonyBeats Order - ${userEmail}`
                                                     },
-                                                    description: `AgonyBeats Order - ${userEmail}`
-                                                },
-                                            ],
-                                        });
-                                    }}
-                                    onApprove={async (data, actions) => {
-                                        const details = await actions.order.capture();
-                                        console.log("Transaction completed by " + details.payer.name.given_name);
-                                        // Call Order API to get files
-                                        processOrder();
-                                    }}
-                                    onError={(err) => {
-                                        console.error("PayPal Error:", err);
-                                        alert("Payment could not be processed. Please try again.");
-                                    }}
-                                />
+                                                ],
+                                            });
+                                        }}
+                                        onApprove={async (data, actions) => {
+                                            const details = await actions.order.capture();
+                                            console.log("Transaction completed by " + details.payer.name.given_name);
+                                            processOrder();
+                                        }}
+                                        onError={(err) => {
+                                            console.error("PayPal Error:", err);
+                                            alert("Payment could not be processed. Please try again.");
+                                        }}
+                                    />
+                                )}
                             </div>
                         ) : (
                             <p style={{ color: '#888', fontStyle: 'italic', textAlign: 'center' }}>

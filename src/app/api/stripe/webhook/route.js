@@ -36,21 +36,20 @@ export async function POST(req) {
                 const session = event.data.object;
 
                 if (session.mode === "subscription") {
+                    // Handle subscription payments
                     const userId = session.metadata?.userId;
                     const planId = session.metadata?.planId;
                     const subscriptionId = session.subscription;
 
                     if (userId && planId && subscriptionId) {
-                        // Get subscription details
                         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
-                        // Create or update subscription in database
                         await prisma.subscription.upsert({
                             where: { userId },
                             update: {
                                 tierId: planId,
                                 status: "ACTIVE",
-                                paypalSubscriptionId: subscriptionId, // Reusing field for Stripe
+                                paypalSubscriptionId: subscriptionId,
                                 currentPeriodEnd: new Date(subscription.current_period_end * 1000),
                                 cancelledAt: null,
                             },
@@ -64,6 +63,40 @@ export async function POST(req) {
                         });
 
                         console.log(`✅ Subscription created for user ${userId}, plan: ${planId}`);
+                    }
+                } else if (session.mode === "payment") {
+                    // Handle one-time beat purchases
+                    const userEmail = session.metadata?.userEmail || session.customer_email;
+                    const userName = session.metadata?.userName;
+                    const userId = session.metadata?.userId;
+                    const cartItemsStr = session.metadata?.cartItems;
+                    const total = parseFloat(session.metadata?.total || '0');
+
+                    if (cartItemsStr && userEmail) {
+                        try {
+                            const cartItems = JSON.parse(cartItemsStr);
+
+                            // Create purchase records for each item
+                            for (const item of cartItems) {
+                                await prisma.purchase.create({
+                                    data: {
+                                        beatId: item.id,
+                                        userId: userId || null,
+                                        licenseId: item.licenseId || null,
+                                        amount: item.price || 0,
+                                        buyerEmail: userEmail,
+                                        buyerName: userName || null,
+                                        status: 'completed'
+                                    }
+                                });
+                            }
+
+                            console.log(`✅ Beat purchase completed for ${userEmail}, ${cartItems.length} items, total: €${total}`);
+
+                            // Note: Email delivery is handled via /api/orders when user lands on success page
+                        } catch (parseError) {
+                            console.error("Error parsing cart items:", parseError);
+                        }
                     }
                 }
                 break;
