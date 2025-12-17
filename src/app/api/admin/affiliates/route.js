@@ -38,6 +38,10 @@ export async function GET(req) {
             userEmail: aff.user.email,
             commission: aff.commission,
             totalEarnings: aff.totalEarnings,
+            paidAmount: aff.paidAmount,
+            pendingPayout: aff.totalEarnings - aff.paidAmount,
+            paypalEmail: aff.paypalEmail,
+            notes: aff.notes,
             conversions: aff.referrals.length,
             status: aff.status,
             createdAt: aff.createdAt
@@ -64,7 +68,7 @@ export async function PUT(req) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { affiliateId, status, commission } = await req.json();
+        const { affiliateId, status, commission, paidAmount, paypalEmail, notes } = await req.json();
 
         if (!affiliateId) {
             return NextResponse.json({ error: "Affiliate ID required" }, { status: 400 });
@@ -73,6 +77,9 @@ export async function PUT(req) {
         const updateData = {};
         if (status) updateData.status = status;
         if (commission !== undefined) updateData.commission = parseFloat(commission);
+        if (paidAmount !== undefined) updateData.paidAmount = parseFloat(paidAmount);
+        if (paypalEmail !== undefined) updateData.paypalEmail = paypalEmail;
+        if (notes !== undefined) updateData.notes = notes;
 
         const updated = await prisma.affiliate.update({
             where: { id: affiliateId },

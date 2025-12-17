@@ -303,6 +303,9 @@ model Affiliate {
   code          String           @unique
   commission    Float            @default(10.0) // Percentage
   totalEarnings Float            @default(0)
+  paidAmount    Float            @default(0)    // Amount already paid out
+  paypalEmail   String?                         // Affiliate's PayPal for payouts
+  notes         String?                         // Admin notes for tracking
   status        String           @default("active")
   createdAt     DateTime         @default(now())
   user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)

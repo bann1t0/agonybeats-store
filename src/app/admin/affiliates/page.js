@@ -164,10 +164,11 @@ export default function AdminAffiliatesPage() {
                                 <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.1)' }}>
                                     <th style={thStyle}>Code</th>
                                     <th style={thStyle}>User</th>
-                                    <th style={thStyle}>Email</th>
+                                    <th style={thStyle}>PayPal Email</th>
                                     <th style={thStyle}>Commission</th>
-                                    <th style={thStyle}>Earnings</th>
-                                    <th style={thStyle}>Conversions</th>
+                                    <th style={thStyle}>Total Earned</th>
+                                    <th style={thStyle}>Paid</th>
+                                    <th style={thStyle}>Pending</th>
                                     <th style={thStyle}>Status</th>
                                     <th style={thStyle}>Actions</th>
                                 </tr>
@@ -188,7 +189,9 @@ export default function AdminAffiliatesPage() {
                                             </code>
                                         </td>
                                         <td style={tdStyle}>{aff.userName || 'N/A'}</td>
-                                        <td style={tdStyle}>{aff.userEmail}</td>
+                                        <td style={tdStyle}>
+                                            {aff.paypalEmail || <span style={{ color: '#666' }}>Not set</span>}
+                                        </td>
                                         <td style={tdStyle}>
                                             {editingId === aff.id ? (
                                                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -215,11 +218,23 @@ export default function AdminAffiliatesPage() {
                                             )}
                                         </td>
                                         <td style={tdStyle}>
-                                            <span style={{ color: '#10b981', fontWeight: 'bold' }}>
+                                            <span style={{ color: '#888' }}>
                                                 €{aff.totalEarnings.toFixed(2)}
                                             </span>
                                         </td>
-                                        <td style={tdStyle}>{aff.conversions}</td>
+                                        <td style={tdStyle}>
+                                            <span style={{ color: '#10b981' }}>
+                                                €{(aff.paidAmount || 0).toFixed(2)}
+                                            </span>
+                                        </td>
+                                        <td style={tdStyle}>
+                                            <span style={{
+                                                color: aff.pendingPayout > 0 ? '#f59e0b' : '#666',
+                                                fontWeight: aff.pendingPayout > 0 ? 'bold' : 'normal'
+                                            }}>
+                                                €{(aff.pendingPayout || 0).toFixed(2)}
+                                            </span>
+                                        </td>
                                         <td style={tdStyle}>
                                             <span style={{
                                                 padding: '0.25rem 0.75rem',
@@ -264,7 +279,7 @@ export default function AdminAffiliatesPage() {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                                     <button
                                                         onClick={() => startEdit(aff)}
                                                         style={{
@@ -279,6 +294,32 @@ export default function AdminAffiliatesPage() {
                                                     >
                                                         Edit
                                                     </button>
+                                                    {aff.pendingPayout > 0 && (
+                                                        <button
+                                                            onClick={() => {
+                                                                const amount = prompt(
+                                                                    `Mark payment for ${aff.userName || aff.code}?\n\nPending: €${aff.pendingPayout.toFixed(2)}\n\nEnter amount paid:`,
+                                                                    aff.pendingPayout.toFixed(2)
+                                                                );
+                                                                if (amount) {
+                                                                    const newPaid = (aff.paidAmount || 0) + parseFloat(amount);
+                                                                    updateAffiliate(aff.id, { paidAmount: newPaid });
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                padding: '0.25rem 0.75rem',
+                                                                background: '#f59e0b',
+                                                                border: 'none',
+                                                                color: 'black',
+                                                                borderRadius: '4px',
+                                                                cursor: 'pointer',
+                                                                fontSize: '0.85rem',
+                                                                fontWeight: 'bold'
+                                                            }}
+                                                        >
+                                                            💰 Pay
+                                                        </button>
+                                                    )}
                                                     <button
                                                         onClick={() => updateAffiliate(aff.id, {
                                                             status: aff.status === 'active' ? 'inactive' : 'active'
