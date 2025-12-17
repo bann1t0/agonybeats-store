@@ -70,6 +70,12 @@ export default function CheckoutPage() {
     const handleApplyCoupon = async () => {
         const code = couponInput.toUpperCase().trim();
 
+        // Prevent stacking multiple discount codes
+        if (appliedCoupon) {
+            setLocalCouponMsg("⚠️ Only one discount code allowed. Remove current code first.");
+            return;
+        }
+
         // Keep test codes for development
         if (code === 'TEST100') {
             setAppliedCoupon({ code: 'TEST100' });
@@ -309,9 +315,27 @@ export default function CheckoutPage() {
                             )}
 
                             {appliedCoupon && (
-                                <div className={styles.totalRow} style={{ fontSize: '1rem', color: 'var(--neon-purple)' }}>
+                                <div className={styles.totalRow} style={{ fontSize: '1rem', color: 'var(--neon-purple)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <span>Coupon ({appliedCoupon.code})</span>
-                                    <span>-${couponDiscount.toFixed(2)}</span>
+                                    <button
+                                        onClick={() => {
+                                            setAppliedCoupon(null);
+                                            setCouponInput('');
+                                            setLocalCouponMsg('');
+                                        }}
+                                        style={{
+                                            background: 'rgba(239, 68, 68, 0.2)',
+                                            border: '1px solid #ef4444',
+                                            color: '#ef4444',
+                                            padding: '0.2rem 0.5rem',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.75rem'
+                                        }}
+                                    >
+                                        ✕ Remove
+                                    </button>
+                                    <span style={{ marginLeft: 'auto' }}>-${couponDiscount.toFixed(2)}</span>
                                 </div>
                             )}
 
