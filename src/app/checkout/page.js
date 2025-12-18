@@ -570,7 +570,13 @@ export default function CheckoutPage() {
 
                         {finalTotal > 0 && (
                             <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: '#666' }}>
-                                <p>🔒 Secure Payment via {paymentMethod === "stripe" ? "Stripe" : "PayPal"}</p>
+                                <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    Secure Payment via {paymentMethod === "stripe" ? "Stripe" : "PayPal"}
+                                </p>
                                 <p>{paymentMethod === "stripe" ? "Powered by Stripe - Industry Standard Security" : "Accepts Credit/Debit Cards & PayPal Balance"}</p>
                             </div>
                         )}
