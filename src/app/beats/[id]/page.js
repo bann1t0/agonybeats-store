@@ -54,14 +54,29 @@ function BeatDetailsContent() {
     const displayLicenses = React.useMemo(() => {
         if (!beat) return [];
         if (beat.licenses && beat.licenses.length > 0) {
-            return beat.licenses.map(bl => ({
-                id: bl.licenseId,
-                title: bl.license.name,
-                price: bl.price !== null ? bl.price : bl.license.defaultPrice,
-                type: bl.license.name.toLowerCase().replace(/\s+/g, '-'),
-                features: bl.license.features,
-                isRecommended: bl.license.isRecommended
-            })).sort((a, b) => a.price - b.price);
+            return beat.licenses.map(bl => {
+                const basePrice = bl.price !== null ? bl.price : bl.license.defaultPrice;
+                const features = bl.license.features || '';
+
+                // Check if license includes stems but beat doesn't have stems
+                const licenseIncludesStems = features.toLowerCase().includes('stem');
+                const beatMissingStems = !beat.stems;
+                const shouldDiscount = licenseIncludesStems && beatMissingStems;
+
+                // Apply 15% discount if stems are expected but missing
+                const finalPrice = shouldDiscount ? Math.round(basePrice * 0.85 * 100) / 100 : basePrice;
+
+                return {
+                    id: bl.licenseId,
+                    title: bl.license.name,
+                    price: finalPrice,
+                    originalPrice: shouldDiscount ? basePrice : null, // Show original if discounted
+                    type: bl.license.name.toLowerCase().replace(/\s+/g, '-'),
+                    features: bl.license.features,
+                    isRecommended: bl.license.isRecommended,
+                    hasStemsDiscount: shouldDiscount
+                };
+            }).sort((a, b) => a.price - b.price);
         }
         // Fallback for legacy beats without attached licenses
         return [{ title: "Basic Lease", price: beat.price || 19.99, type: "basic" }];
@@ -484,14 +499,34 @@ function BeatDetailsContent() {
                                 disabled={!selectedLicense}
                                 onClick={handleAddToCart}
                             >
-                                {selectedLicense ? `ADD TO CART - $${selectedLicense.price}` : "SELECT A LICENSE"}
+                                {selectedLicense ? (
+                                    selectedLicense.hasStemsDiscount ? (
+                                        <>
+                                            ADD TO CART -
+                                            <span style={{ textDecoration: 'line-through', opacity: 0.6, marginLeft: '4px' }}>${selectedLicense.originalPrice}</span>
+                                            <span style={{ color: '#4ade80', marginLeft: '4px' }}>${selectedLicense.price}</span>
+                                        </>
+                                    ) : `ADD TO CART - $${selectedLicense.price}`
+                                ) : "SELECT A LICENSE"}
                             </button>
                         )}
 
-                        {selectedLicense && !beat.stems && selectedLicense.features && selectedLicense.features.toLowerCase().includes('stem') && (
-                            <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
-                                Warning: This license includes Stems but they are not uploaded.
-                            </p>
+                        {selectedLicense?.hasStemsDiscount && (
+                            <div style={{
+                                background: 'rgba(251, 191, 36, 0.15)',
+                                border: '1px solid #f59e0b',
+                                borderRadius: '8px',
+                                padding: '0.75rem',
+                                marginTop: '0.75rem',
+                                textAlign: 'center'
+                            }}>
+                                <p style={{ color: '#fbbf24', fontSize: '0.85rem', fontWeight: 'bold', margin: 0 }}>
+                                    ⚠️ 15% OFF - Stems Not Available
+                                </p>
+                                <p style={{ color: '#d97706', fontSize: '0.75rem', marginTop: '0.25rem', marginBottom: 0 }}>
+                                    This license normally includes stems but they're not uploaded for this beat.
+                                </p>
+                            </div>
                         )}
 
                         <p style={{ color: '#666', fontSize: '0.8rem', marginTop: '1rem', textAlign: 'center' }}>
