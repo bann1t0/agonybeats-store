@@ -351,6 +351,7 @@ function BeatDetailsContent() {
                             <div className={styles.meta}>
                                 <span className={styles.metaItem}>{beat.bpm} BPM</span>
                                 <span className={styles.metaItem}>{beat.key}</span>
+                                <span className={styles.metaItem}>{beat.genre}</span>
                             </div>
                         </div>
                     </div>
