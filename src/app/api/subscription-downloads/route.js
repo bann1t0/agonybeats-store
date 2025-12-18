@@ -161,8 +161,11 @@ export async function POST(req) {
 
             // Build download files based on tier
             let downloadFiles = { mp3: beat.audio };
+            let primaryDownload = beat.audio; // Default to MP3
+
             if ((licenseType === 'WAV_LEASE' || licenseType === 'PREMIUM_UNLIMITED') && beat.wav) {
                 downloadFiles.wav = beat.wav;
+                primaryDownload = beat.wav; // WAV becomes primary
             }
             if (licenseType === 'PREMIUM_UNLIMITED' && beat.stems) {
                 downloadFiles.stems = beat.stems;
@@ -171,7 +174,7 @@ export async function POST(req) {
             return NextResponse.json({
                 success: true,
                 message: "You've already downloaded this beat - downloading again (doesn't count as new download)",
-                downloadUrl: beat.audio,
+                downloadUrl: primaryDownload, // WAV if available
                 downloadFiles,
                 licenseType,
                 remaining: remaining,
@@ -223,10 +226,14 @@ export async function POST(req) {
         const licenseType = tier?.benefits.licenseType || 'MP3_LEASE';
         let downloadFiles = { mp3: beat.audio };
 
+        // Primary download: WAV if available, otherwise MP3
+        let primaryDownload = beat.audio; // Default to MP3
+
         // Add WAV for WAV_LEASE and PREMIUM_UNLIMITED tiers
         if (licenseType === 'WAV_LEASE' || licenseType === 'PREMIUM_UNLIMITED') {
             if (beat.wav) {
                 downloadFiles.wav = beat.wav;
+                primaryDownload = beat.wav; // WAV becomes primary download
             }
         }
 
@@ -238,7 +245,7 @@ export async function POST(req) {
         return NextResponse.json({
             success: true,
             message: "Download recorded successfully",
-            downloadUrl: beat.audio, // Primary download (MP3)
+            downloadUrl: primaryDownload, // WAV if available, else MP3
             downloadFiles, // All available files for this tier
             licenseType,
             remaining: getRemainingDownloads(subscription, downloadsThisMonth + 1),
