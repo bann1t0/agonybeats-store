@@ -173,32 +173,57 @@ export async function POST(req) {
                 console.log("Beat found for visuals:", beat.title);
 
                 // Convert beat image to base64 for email embedding
-                const fs = require('fs');
-                const path = require('path');
                 let imageBase64 = null;
                 let imageCid = 'beatcover@agonybeats';
 
                 try {
-                    // Construct full path to the image
-                    const imagePath = path.join(process.cwd(), 'public', beat.cover);
-                    console.log("Attempting to read image from:", imagePath);
+                    // Check if cover is a URL (R2) or local path
+                    if (beat.cover && (beat.cover.startsWith('http://') || beat.cover.startsWith('https://'))) {
+                        // Fetch image from R2/URL
+                        console.log("Fetching image from URL:", beat.cover);
+                        const imageResponse = await fetch(beat.cover);
+                        if (imageResponse.ok) {
+                            const imageArrayBuffer = await imageResponse.arrayBuffer();
+                            const imageBuffer = Buffer.from(imageArrayBuffer);
+                            imageBase64 = imageBuffer.toString('base64');
 
-                    if (fs.existsSync(imagePath)) {
-                        const imageBuffer = fs.readFileSync(imagePath);
-                        imageBase64 = imageBuffer.toString('base64');
+                            // Get filename from URL or default
+                            const urlParts = beat.cover.split('/');
+                            const filename = urlParts[urlParts.length - 1] || 'cover.jpg';
 
-                        // Add image as CID attachment
-                        attachments.push({
-                            filename: path.basename(beat.cover),
-                            content: imageBuffer,
-                            cid: imageCid
-                        });
-                        console.log("Image attached successfully as CID");
-                    } else {
-                        console.warn("Image file not found:", imagePath);
+                            // Add image as CID attachment
+                            attachments.push({
+                                filename: filename,
+                                content: imageBuffer,
+                                cid: imageCid
+                            });
+                            console.log("Image fetched and attached successfully as CID");
+                        } else {
+                            console.warn("Failed to fetch image from URL:", imageResponse.status);
+                        }
+                    } else if (beat.cover) {
+                        // Try local filesystem (legacy)
+                        const fs = require('fs');
+                        const path = require('path');
+                        const imagePath = path.join(process.cwd(), 'public', beat.cover);
+                        console.log("Attempting to read image from:", imagePath);
+
+                        if (fs.existsSync(imagePath)) {
+                            const imageBuffer = fs.readFileSync(imagePath);
+                            imageBase64 = imageBuffer.toString('base64');
+
+                            attachments.push({
+                                filename: path.basename(beat.cover),
+                                content: imageBuffer,
+                                cid: imageCid
+                            });
+                            console.log("Image attached successfully as CID");
+                        } else {
+                            console.warn("Image file not found:", imagePath);
+                        }
                     }
                 } catch (imageErr) {
-                    console.error("Error reading beat image:", imageErr);
+                    console.error("Error loading beat image:", imageErr);
                 }
 
                 htmlContent += `
