@@ -602,36 +602,7 @@ function HomeContent() {
                     </div>
                   </div>
 
-                  {/* Mini Player Row for Description/Controls */}
-                  {isMinActive && (
-                    <div className={styles.catPlayerRow}>
-                      <div className={styles.catTime}>{formatTime(currentTime)}</div>
-                      <input
-                        type="range"
-                        min="0"
-                        max={duration || 0}
-                        step="0.05"
-                        value={currentTime}
-                        onChange={handleSeek}
-                        className={styles.catProgressBar}
-                        style={{ backgroundSize: `${(currentTime / duration) * 100}% 100%` }}
-                      />
-                      <div className={styles.catTime}>{formatTime(duration)}</div>
-
-                      <div className={styles.catVolume}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon></svg>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={volume}
-                          onChange={handleVolume}
-                          className={styles.catVolumeInput}
-                        />
-                      </div>
-                    </div>
-                  )}
+                  {/* Mini player removed - use sticky player at bottom instead */}
                 </div>
               );
             })}
