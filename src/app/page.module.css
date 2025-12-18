@@ -587,8 +587,7 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s;
-  overflow: hidden;
-  /* Contain buttons */
+  border-radius: 8px;
 }
 
 .catalogueItem:hover {
@@ -696,7 +695,12 @@
   position: relative;
   width: 60px;
   height: 60px;
+  min-width: 60px;
+  min-height: 60px;
+  flex-shrink: 0;
   cursor: pointer;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .catImage {
