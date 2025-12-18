@@ -108,26 +108,33 @@ function SubscriptionsManagementPage() {
     }
 
     async function handleCancel() {
-        if (!confirm('Are you sure you want to cancel your subscription? You\'ll lose access at the end of your billing period.')) {
+        if (!confirm('You will be redirected to manage your subscription. Do you want to proceed?')) {
             return;
         }
 
         setCanceling(true);
         try {
-            const res = await fetch('/api/subscriptions', {
-                method: 'DELETE'
+            const res = await fetch('/api/stripe/cancel-subscription', {
+                method: 'POST'
             });
 
+            const data = await res.json();
+
             if (!res.ok) {
-                const error = await res.json();
-                throw new Error(error.error || 'Failed to cancel subscription');
+                throw new Error(data.error || 'Failed to get cancellation link');
             }
 
-            alert('Subscription cancelled successfully. You\'ll keep access until the end of your billing period.');
-            fetchSubscription();
+            // Redirect to the appropriate cancellation page
+            if (data.cancelUrl) {
+                if (data.type === 'paypal') {
+                    alert(`You'll be redirected to PayPal to manage your subscription.\n\nYour subscription ID is: ${data.subscriptionId}\n\nLook for this ID in your PayPal automatic payments.`);
+                }
+                window.location.href = data.cancelUrl;
+            } else {
+                throw new Error('No cancellation URL returned');
+            }
         } catch (error) {
             alert(error.message);
-        } finally {
             setCanceling(false);
         }
     }
