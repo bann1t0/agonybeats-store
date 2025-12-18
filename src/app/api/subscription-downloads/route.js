@@ -157,13 +157,30 @@ export async function POST(req) {
         if (existingDownload) {
             // Already downloaded, just return the file URL (doesn't count as new download)
             const remaining = getRemainingDownloads(subscription, downloadsThisMonth);
+            const licenseType = tier?.benefits.licenseType || 'MP3_LEASE';
+
+            // Build download files based on tier
+            let downloadFiles = { mp3: beat.audio };
+            if ((licenseType === 'WAV_LEASE' || licenseType === 'PREMIUM_UNLIMITED') && beat.wav) {
+                downloadFiles.wav = beat.wav;
+            }
+            if (licenseType === 'PREMIUM_UNLIMITED' && beat.stems) {
+                downloadFiles.stems = beat.stems;
+            }
+
             return NextResponse.json({
                 success: true,
                 message: "You've already downloaded this beat - downloading again (doesn't count as new download)",
                 downloadUrl: beat.audio,
-                licenseType: tier?.benefits.licenseType || 'MP3_LEASE',
+                downloadFiles,
+                licenseType,
                 remaining: remaining,
-                wasReDownload: true
+                wasReDownload: true,
+                tier: {
+                    name: tier?.name,
+                    includesWav: licenseType === 'WAV_LEASE' || licenseType === 'PREMIUM_UNLIMITED',
+                    includesStems: licenseType === 'PREMIUM_UNLIMITED'
+                }
             });
         }
 
@@ -202,12 +219,34 @@ export async function POST(req) {
             console.error("Failed to update analytics:", e);
         }
 
+        // Determine which files to provide based on tier
+        const licenseType = tier?.benefits.licenseType || 'MP3_LEASE';
+        let downloadFiles = { mp3: beat.audio };
+
+        // Add WAV for WAV_LEASE and PREMIUM_UNLIMITED tiers
+        if (licenseType === 'WAV_LEASE' || licenseType === 'PREMIUM_UNLIMITED') {
+            if (beat.wav) {
+                downloadFiles.wav = beat.wav;
+            }
+        }
+
+        // Add stems for PREMIUM_UNLIMITED tier (Special VIP)
+        if (licenseType === 'PREMIUM_UNLIMITED' && beat.stems) {
+            downloadFiles.stems = beat.stems;
+        }
+
         return NextResponse.json({
             success: true,
             message: "Download recorded successfully",
-            downloadUrl: beat.audio,
-            licenseType: tier?.benefits.licenseType || 'MP3_LEASE',
-            remaining: getRemainingDownloads(subscription, downloadsThisMonth + 1)
+            downloadUrl: beat.audio, // Primary download (MP3)
+            downloadFiles, // All available files for this tier
+            licenseType,
+            remaining: getRemainingDownloads(subscription, downloadsThisMonth + 1),
+            tier: {
+                name: tier?.name,
+                includesWav: licenseType === 'WAV_LEASE' || licenseType === 'PREMIUM_UNLIMITED',
+                includesStems: licenseType === 'PREMIUM_UNLIMITED'
+            }
         });
 
     } catch (error) {
