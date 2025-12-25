@@ -2,9 +2,19 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2023-10-16",
-});
+// Lazy Stripe initialization to avoid undefined API key at module load
+let stripeInstance = null;
+function getStripe() {
+    if (!stripeInstance) {
+        if (!process.env.STRIPE_SECRET_KEY) {
+            throw new Error("STRIPE_SECRET_KEY is not configured");
+        }
+        stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+            apiVersion: "2023-10-16",
+        });
+    }
+    return stripeInstance;
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -18,7 +28,7 @@ export async function POST(req) {
         // Verify webhook signature
         if (webhookSecret) {
             try {
-                event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+                event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
             } catch (err) {
                 console.error("Webhook signature verification failed:", err.message);
                 return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
@@ -42,7 +52,7 @@ export async function POST(req) {
                     const subscriptionId = session.subscription;
 
                     if (userId && planId && subscriptionId) {
-                        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+                        const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
 
                         await prisma.subscription.upsert({
                             where: { userId },

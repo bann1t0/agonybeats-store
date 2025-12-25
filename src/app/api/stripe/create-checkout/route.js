@@ -3,9 +3,19 @@ import Stripe from "stripe";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2023-10-16",
-});
+// Lazy Stripe initialization to avoid undefined API key at module load
+let stripeInstance = null;
+function getStripe() {
+    if (!stripeInstance) {
+        if (!process.env.STRIPE_SECRET_KEY) {
+            throw new Error("STRIPE_SECRET_KEY is not configured");
+        }
+        stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+            apiVersion: "2023-10-16",
+        });
+    }
+    return stripeInstance;
+}
 
 // Stripe Price IDs for subscription plans
 const STRIPE_PRICES = {
@@ -31,7 +41,7 @@ export async function POST(req) {
         const priceId = STRIPE_PRICES[planId];
 
         // Create Stripe Checkout Session for subscription
-        const checkoutSession = await stripe.checkout.sessions.create({
+        const checkoutSession = await getStripe().checkout.sessions.create({
             mode: "subscription",
             payment_method_types: ["card"],
             line_items: [

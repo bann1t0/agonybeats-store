@@ -3,9 +3,19 @@ import Stripe from "stripe";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2023-10-16",
-});
+// Lazy Stripe initialization to avoid undefined API key at module load
+let stripeInstance = null;
+function getStripe() {
+    if (!stripeInstance) {
+        if (!process.env.STRIPE_SECRET_KEY) {
+            throw new Error("STRIPE_SECRET_KEY is not configured");
+        }
+        stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+            apiVersion: "2023-10-16",
+        });
+    }
+    return stripeInstance;
+}
 
 // POST /api/stripe/create-payment - Create Stripe Checkout for beat purchases
 export async function POST(req) {
@@ -99,7 +109,7 @@ export async function POST(req) {
         }
 
         // Create Stripe Checkout Session
-        const checkoutSession = await stripe.checkout.sessions.create({
+        const checkoutSession = await getStripe().checkout.sessions.create({
             mode: "payment",
             payment_method_types: ["card"],
             line_items: lineItems,

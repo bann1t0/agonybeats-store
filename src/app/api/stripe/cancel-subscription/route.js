@@ -4,9 +4,19 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2023-10-16",
-});
+// Lazy Stripe initialization to avoid undefined API key at module load
+let stripeInstance = null;
+function getStripe() {
+    if (!stripeInstance) {
+        if (!process.env.STRIPE_SECRET_KEY) {
+            throw new Error("STRIPE_SECRET_KEY is not configured");
+        }
+        stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+            apiVersion: "2023-10-16",
+        });
+    }
+    return stripeInstance;
+}
 
 // POST /api/stripe/cancel-subscription - Get cancellation URL or cancel subscription
 export async function POST(req) {
@@ -40,10 +50,10 @@ export async function POST(req) {
             // Create Stripe Billing Portal session for cancellation
             try {
                 // First get customer ID from subscription
-                const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+                const stripeSubscription = await getStripe().subscriptions.retrieve(subscriptionId);
                 const customerId = stripeSubscription.customer;
 
-                const portalSession = await stripe.billingPortal.sessions.create({
+                const portalSession = await getStripe().billingPortal.sessions.create({
                     customer: customerId,
                     return_url: `${process.env.NEXTAUTH_URL || 'https://agonybeats.com'}/account/subscriptions?canceled=true`,
                 });
