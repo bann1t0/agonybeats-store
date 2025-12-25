@@ -54,23 +54,38 @@ export async function GET(req) {
     }
 }
 
-// POST /api/reviews - Create a new review
+// POST /api/reviews - Create a new review (REQUIRES PURCHASE)
 export async function POST(req) {
     try {
         const session = await getServerSession(authOptions);
         if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ error: "Devi effettuare il login per lasciare una recensione" }, { status: 401 });
         }
 
         const body = await req.json();
-        const { beatId, rating, comment } = body;
+        const { beatId, rating, title, comment } = body;
 
         if (!beatId || !rating) {
-            return NextResponse.json({ error: "beatId and rating required" }, { status: 400 });
+            return NextResponse.json({ error: "beatId e rating sono richiesti" }, { status: 400 });
         }
 
         if (rating < 1 || rating > 5) {
-            return NextResponse.json({ error: "Rating must be between 1 and 5" }, { status: 400 });
+            return NextResponse.json({ error: "Il rating deve essere tra 1 e 5" }, { status: 400 });
+        }
+
+        // Check if user PURCHASED this beat (REQUIRED)
+        const hasPurchased = await prisma.purchase.findFirst({
+            where: {
+                userId: session.user.id,
+                beatId,
+                status: "completed"
+            }
+        });
+
+        if (!hasPurchased) {
+            return NextResponse.json({
+                error: "Puoi recensire solo i beat che hai acquistato"
+            }, { status: 403 });
         }
 
         // Check if user already reviewed this beat
@@ -84,25 +99,17 @@ export async function POST(req) {
         });
 
         if (existing) {
-            return NextResponse.json({ error: "You already reviewed this beat" }, { status: 400 });
+            return NextResponse.json({ error: "Hai già recensito questo beat" }, { status: 400 });
         }
-
-        // Check if user purchased this beat (for verified badge)
-        const hasPurchased = await prisma.purchase.findFirst({
-            where: {
-                userId: session.user.id,
-                beatId,
-                status: "completed"
-            }
-        });
 
         const review = await prisma.review.create({
             data: {
                 userId: session.user.id,
                 beatId,
                 rating,
+                title: title || null,
                 comment: comment || null,
-                verified: !!hasPurchased
+                verified: true // Always verified since purchase is required
             },
             include: {
                 user: {

@@ -1,0 +1,439 @@
+.container {
+    min-height: 100vh;
+    background: #0a0a0a;
+    padding-top: 120px;
+    padding-bottom: 4rem;
+}
+
+.content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    color: #888;
+}
+
+.header {
+    margin-bottom: 2.5rem;
+}
+
+.backLink {
+    color: #888;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 1rem;
+    transition: color 0.2s;
+}
+
+.backLink:hover {
+    color: #fff;
+}
+
+.title {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    color: #888;
+    font-size: 1.1rem;
+}
+
+/* Empty State */
+.emptyState {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.emptyIcon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.emptyState h2 {
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.emptyState p {
+    color: #888;
+    margin-bottom: 2rem;
+}
+
+.browseButton {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.browseButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+/* Purchase Cards */
+.purchasesList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.purchaseCard {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.purchaseCard:hover {
+    border-color: rgba(102, 126, 234, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.cover {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.purchaseInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.beatName {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.beatArtist {
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.purchaseDetails {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+}
+
+.license {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.15);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+}
+
+.date {
+    color: #666;
+}
+
+.amount {
+    color: #10b981;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.reviewButton {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.reviewButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 20px rgba(245, 158, 11, 0.3);
+}
+
+.reviewedBadge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.checkIcon {
+    font-size: 1rem;
+}
+
+.viewButton {
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ccc;
+    text-decoration: none;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.9rem;
+    transition: background 0.2s, color 0.2s;
+}
+
+.viewButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+/* Star Rating */
+.starRating {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.star {
+    background: none;
+    border: none;
+    color: #333;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s, transform 0.15s;
+}
+
+.star:disabled {
+    cursor: default;
+}
+
+.starFilled {
+    color: #f59e0b !important;
+}
+
+.star:not(:disabled):hover {
+    transform: scale(1.15);
+}
+
+/* Modal */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal {
+    background: #1a1a1a;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+    position: relative;
+    animation: modalIn 0.2s ease-out;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.closeButton {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #888;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s, color 0.2s;
+}
+
+.closeButton:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-right: 2rem;
+}
+
+.modalCover {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.modalTitle {
+    color: white;
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.beatTitle {
+    color: #888;
+    font-size: 0.95rem;
+}
+
+.reviewForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formGroup label {
+    color: #ccc;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.input,
+.textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.875rem 1rem;
+    color: white;
+    font-size: 1rem;
+    transition: border-color 0.2s, background 0.2s;
+    font-family: inherit;
+}
+
+.input:focus,
+.textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+    color: #555;
+}
+
+.textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.error {
+    color: #ef4444;
+    font-size: 0.9rem;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.submitButton {
+    padding: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.submitButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.submitButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .purchaseCard {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .cover {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+    }
+
+    .purchaseDetails {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .actions {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+}

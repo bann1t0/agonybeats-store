@@ -51,6 +51,10 @@ function BeatDetailsContent() {
     const [subscriptionData, setSubscriptionData] = useState(null);
     const [downloading, setDownloading] = useState(false);
 
+    // Reviews state
+    const [reviews, setReviews] = useState([]);
+    const [reviewsData, setReviewsData] = useState({ avgRating: 0, totalReviews: 0 });
+
     const displayLicenses = React.useMemo(() => {
         if (!beat) return [];
         if (beat.licenses && beat.licenses.length > 0) {
@@ -142,6 +146,23 @@ function BeatDetailsContent() {
                 .catch(console.error);
         }
     }, [session]);
+
+    // Fetch reviews for this beat
+    useEffect(() => {
+        if (!id) return;
+        fetch(`/api/reviews?beatId=${id}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data) {
+                    setReviews(data.reviews || []);
+                    setReviewsData({
+                        avgRating: data.avgRating || 0,
+                        totalReviews: data.totalReviews || 0
+                    });
+                }
+            })
+            .catch(console.error);
+    }, [id]);
 
     // License type mapping for subscription tiers
     const LICENSE_TYPE_MAP = {
@@ -549,24 +570,131 @@ function BeatDetailsContent() {
                     </div>
                 </div>
 
-                {
-                    similarBeats.length > 0 && (
-                        <div className={styles.similarSection}>
-                            <h3 className={styles.similarTitle}>Similar Vibes <StarsIcon /></h3>
-                            <div className={styles.similarGrid}>
-                                {similarBeats.map(sim => (
-                                    <Link key={sim.id} href={`/beats/${sim.id}`} className={styles.similarCard}>
-                                        <img src={sim.cover} alt={sim.title} className={styles.similarCover} />
-                                        <div className={styles.similarInfo}>
-                                            <h4>{sim.title}</h4>
-                                            <span>{sim.bpm} BPM • {sim.key}</span>
+                {/* Reviews Section */}
+                <div style={{
+                    maxWidth: '1200px',
+                    margin: '0 auto',
+                    padding: '2rem',
+                    marginTop: '2rem'
+                }}>
+                    <div style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        padding: '2rem'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                            <h3 style={{ color: 'white', fontSize: '1.5rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                ⭐ Recensioni
+                                <span style={{ color: '#888', fontSize: '1rem', fontWeight: 'normal' }}>({reviewsData.totalReviews})</span>
+                            </h3>
+                            {reviewsData.totalReviews > 0 && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <span style={{ color: '#f59e0b', fontSize: '1.5rem' }}>{'★'.repeat(Math.round(reviewsData.avgRating))}</span>
+                                    <span style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}>{reviewsData.avgRating}</span>
+                                    <span style={{ color: '#888' }}>/ 5</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {reviews.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>
+                                <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Nessuna recensione ancora</p>
+                                <p style={{ fontSize: '0.9rem' }}>Acquista questo beat per lasciare la prima recensione!</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {reviews.map(review => (
+                                    <div key={review.id} style={{
+                                        background: 'rgba(255, 255, 255, 0.02)',
+                                        borderRadius: '12px',
+                                        padding: '1.25rem',
+                                        border: '1px solid rgba(255, 255, 255, 0.05)'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                {review.user?.image ? (
+                                                    <img
+                                                        src={review.user.image}
+                                                        alt={review.user.name || 'User'}
+                                                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                                                    />
+                                                ) : (
+                                                    <div style={{
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        borderRadius: '50%',
+                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: 'white',
+                                                        fontWeight: 'bold'
+                                                    }}>
+                                                        {(review.user?.name || 'U')[0].toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <span style={{ color: 'white', fontWeight: '600' }}>{review.user?.name || 'Utente'}</span>
+                                                        {review.verified && (
+                                                            <span style={{
+                                                                background: 'rgba(16, 185, 129, 0.15)',
+                                                                color: '#10b981',
+                                                                padding: '0.15rem 0.5rem',
+                                                                borderRadius: '4px',
+                                                                fontSize: '0.7rem',
+                                                                fontWeight: 'bold',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.25rem'
+                                                            }}>
+                                                                ✓ Acquisto Verificato
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span style={{ color: '#666', fontSize: '0.8rem' }}>
+                                                        {new Date(review.createdAt).toLocaleDateString('it-IT')}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div style={{ color: '#f59e0b', fontSize: '1.1rem' }}>
+                                                {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                                            </div>
                                         </div>
-                                    </Link>
+                                        {review.title && (
+                                            <h4 style={{ color: 'white', fontSize: '1rem', margin: '0.75rem 0 0.5rem', fontWeight: '600' }}>
+                                                {review.title}
+                                            </h4>
+                                        )}
+                                        {review.comment && (
+                                            <p style={{ color: '#ccc', fontSize: '0.95rem', margin: 0, lineHeight: 1.6 }}>
+                                                {review.comment}
+                                            </p>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
+                        )}
+                    </div>
+                </div>
+
+                {similarBeats.length > 0 && (
+                    <div className={styles.similarSection}>
+                        <h3 className={styles.similarTitle}>Similar Vibes <StarsIcon /></h3>
+                        <div className={styles.similarGrid}>
+                            {similarBeats.map(sim => (
+                                <Link key={sim.id} href={`/beats/${sim.id}`} className={styles.similarCard}>
+                                    <img src={sim.cover} alt={sim.title} className={styles.similarCover} />
+                                    <div className={styles.similarInfo}>
+                                        <h4>{sim.title}</h4>
+                                        <span>{sim.bpm} BPM • {sim.key}</span>
+                                    </div>
+                                </Link>
+                            ))}
                         </div>
-                    )
-                }
+                    </div>
+                )}
             </main >
         </div >
     );

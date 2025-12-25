@@ -502,7 +502,13 @@ export default function CheckoutPage() {
                                                     body: JSON.stringify({
                                                         cart,
                                                         email: userEmail,
-                                                        name: userName
+                                                        name: userName,
+                                                        finalTotal: finalTotal,
+                                                        discountInfo: {
+                                                            subscriptionDiscount: subscriptionDiscount > 0 ? subscriptionDiscount : null,
+                                                            couponCode: appliedCoupon?.code || null,
+                                                            bundleDiscount: hasBundle ? bundleDiscount : 0
+                                                        }
                                                     })
                                                 });
                                                 const data = await res.json();

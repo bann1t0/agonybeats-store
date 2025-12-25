@@ -17,23 +17,47 @@ export async function PUT(req, { params }) {
     try {
         const { id } = await params;
         const body = await req.json();
-        const { title, bpm, key, price, cover, audio } = body;
+        const { title, bpm, key, price, cover, audio, taggedAudio, wav, stems, genre } = body;
+
+        // Build update data - always include file paths if they are provided (even if same value)
+        // This ensures replacement files are properly saved
+        const updateData = {
+            title,
+            bpm: parseInt(bpm),
+            key,
+        };
+
+        // Optional fields - only update if provided
+        if (price !== undefined) {
+            updateData.price = parseFloat(price);
+        }
+        if (genre) {
+            updateData.genre = genre;
+        }
+
+        // File fields - ALWAYS update if provided in request body
+        // This is critical for file replacement to work
+        if (cover !== undefined) {
+            updateData.cover = cover;
+        }
+        if (audio !== undefined) {
+            updateData.audio = audio;
+        }
+        if (taggedAudio !== undefined) {
+            updateData.taggedAudio = taggedAudio;
+        }
+        if (wav !== undefined) {
+            updateData.wav = wav;
+        }
+        if (stems !== undefined) {
+            updateData.stems = stems;
+        }
+
+        console.log('Updating beat', id, 'with data:', updateData);
 
         const updatedBeat = await prisma.beat.update({
             where: { id },
-            data: {
-                title,
-                bpm: parseInt(bpm),
-                key,
-                ...(price !== undefined && { price: parseFloat(price) }),
-                // Only update files if new paths are provided
-                ...(cover && { cover }),
-                ...(audio && { audio }),
-                ...(body.taggedAudio && { taggedAudio: body.taggedAudio }),
-                ...(body.wav && { wav: body.wav }),
-                ...(body.stems && { stems: body.stems }),
-                ...(body.genre && { genre: body.genre }),
-            },
+            data: updateData,
         });
 
         // Update Licenses if provided
@@ -69,3 +93,4 @@ export async function PUT(req, { params }) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+

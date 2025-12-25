@@ -157,6 +157,7 @@ model Review {
   userId     String
   beatId     String
   rating     Int      // 1-5 stars
+  title      String?  // Review title
   comment    String?
   verified   Boolean  @default(false) // Has purchased this beat
   createdAt  DateTime @default(now())
