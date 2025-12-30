@@ -27,7 +27,7 @@ export async function GET(req) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Fetch user data
+        // Fetch user data - only basic fields that always exist
         const user = await prisma.user.findUnique({
             where: { id: userId },
             select: {
@@ -36,13 +36,25 @@ export async function GET(req) {
                 email: true,
                 image: true,
                 role: true,
-                twoFactorEnabled: true,
                 isSubscribed: true,
+                password: true, // We'll use this to check hasPassword
             }
         });
 
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // Try to get 2FA status, but don't fail if column doesn't exist
+        let twoFactorEnabled = false;
+        try {
+            const tfaCheck = await prisma.$queryRaw`
+                SELECT "twoFactorEnabled" FROM "User" WHERE id = ${userId}
+            `;
+            twoFactorEnabled = tfaCheck?.[0]?.twoFactorEnabled || false;
+        } catch (e) {
+            // Column might not exist yet - that's ok
+            twoFactorEnabled = false;
         }
 
         // Get purchase statistics
@@ -87,17 +99,17 @@ export async function GET(req) {
             ? purchases.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]?.createdAt
             : null;
 
-        // Check if user has password
-        const userWithPassword = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { password: true }
-        });
-
         return NextResponse.json({
             user: {
-                ...user,
-                createdAt: null, // Not stored for old users
-                hasPassword: !!userWithPassword?.password
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                image: user.image,
+                role: user.role,
+                isSubscribed: user.isSubscribed,
+                twoFactorEnabled,
+                createdAt: null,
+                hasPassword: !!user.password
             },
             stats: {
                 totalSpent: Math.round(totalSpent * 100) / 100,
@@ -112,7 +124,7 @@ export async function GET(req) {
 
     } catch (error) {
         console.error("Account API Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: "Failed to load account data: " + error.message }, { status: 500 });
     }
 }
 
