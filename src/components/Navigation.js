@@ -110,8 +110,17 @@ export default function Navigation() {
                                             <div className={styles.dropdownDivider}></div>
                                         </>
                                     )}
+                                    <Link href="/account" className={styles.dropdownItem}>
+                                        👤 My Account
+                                    </Link>
+                                    <Link href="/account/purchases" className={styles.dropdownItem}>
+                                        🎵 My Purchases
+                                    </Link>
+                                    <Link href="/account/library" className={styles.dropdownItem}>
+                                        📚 My Library
+                                    </Link>
                                     <Link href="/account/subscriptions" className={styles.dropdownItem}>
-                                        My Subscription
+                                        ⭐ My Subscription
                                     </Link>
                                     <div className={styles.dropdownDivider}></div>
                                     <button
