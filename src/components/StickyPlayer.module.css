@@ -171,29 +171,92 @@
 
 @media (max-width: 768px) {
     .stickyPlayer {
-        padding: 0 1rem;
-        height: 120px;
-        flex-direction: column;
+        padding: 0.75rem 1rem;
+        height: auto;
+        min-height: 110px;
+        flex-wrap: wrap;
         justify-content: center;
         gap: 0.5rem;
     }
 
+    /* Track info takes left side, like button takes right */
     .stickyTrackInfo {
-        width: 100%;
-        font-size: 0.8rem;
+        width: auto;
+        flex: 1;
+        min-width: 0;
+        font-size: 0.85rem;
+        gap: 0.75rem;
     }
 
     .stickyCover {
-        width: 40px;
-        height: 40px;
+        width: 45px;
+        height: 45px;
+        flex-shrink: 0;
     }
 
+    .stickyText {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .stickyTitle {
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stickyArtist {
+        font-size: 0.7rem;
+    }
+
+    /* Like button on same row as track info */
+    .stickyLike {
+        padding: 0;
+        order: 1;
+    }
+
+    /* Hide volume on mobile */
     .stickyVolume {
         display: none;
-        /* Hide volume on mobile to save space */
     }
 
-    .stickyLike {
-        padding: 0 0.5rem;
+    /* Controls wrapper - reset absolute positioning */
+    .stickyControlsWrapper {
+        position: static;
+        transform: none;
+        width: 100%;
+        max-width: 100%;
+        order: 2;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Play buttons inline */
+    .stickyButtons {
+        gap: 1rem;
+        flex-shrink: 0;
+    }
+
+    .controlBtn {
+        font-size: 1rem;
+    }
+
+    .playBtn {
+        font-size: 1.5rem;
+    }
+
+    /* Progress bar takes remaining space */
+    .stickyProgress {
+        flex: 1;
+        gap: 0.5rem;
+        font-size: 0.7rem;
+        min-width: 0;
+    }
+
+    .progressBar {
+        height: 6px;
     }
 }
