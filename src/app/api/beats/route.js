@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/security";
 
 export async function GET() {
     try {
@@ -19,9 +20,13 @@ export async function GET() {
 
 export async function POST(req) {
     try {
-        const body = await req.json();
-        console.log("Beats API Received Body:", body); // DEBUG LOG
+        // SECURITY: Only admins can create beats
+        const session = await requireAdmin();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 401 });
+        }
 
+        const body = await req.json();
         const { title, bpm, key, price, cover, audio, genre } = body;
 
         // Validation Check
@@ -59,3 +64,4 @@ export async function POST(req) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+

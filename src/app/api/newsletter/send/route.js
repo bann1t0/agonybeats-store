@@ -2,11 +2,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
+import { requireAdmin } from "@/lib/security";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://agonybeats-store.vercel.app';
 
 export async function POST(req) {
     try {
+        // SECURITY: Only admins can send newsletters
+        const session = await requireAdmin();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 401 });
+        }
+
         console.log("---- STARTING EMAIL SEND ----");
 
         // 0. Env Check

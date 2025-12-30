@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/security";
 
 export async function DELETE(req, { params }) {
     try {
+        // SECURITY: Only admins can delete beats
+        const session = await requireAdmin();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 401 });
+        }
+
         const { id } = await params;
         await prisma.beat.delete({
             where: { id },
@@ -15,6 +22,12 @@ export async function DELETE(req, { params }) {
 
 export async function PUT(req, { params }) {
     try {
+        // SECURITY: Only admins can update beats
+        const session = await requireAdmin();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 401 });
+        }
+
         const { id } = await params;
         const body = await req.json();
         const { title, bpm, key, price, cover, audio, taggedAudio, wav, stems, genre } = body;
@@ -52,8 +65,6 @@ export async function PUT(req, { params }) {
         if (stems !== undefined) {
             updateData.stems = stems;
         }
-
-        console.log('Updating beat', id, 'with data:', updateData);
 
         const updatedBeat = await prisma.beat.update({
             where: { id },
@@ -93,4 +104,3 @@ export async function PUT(req, { params }) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
-

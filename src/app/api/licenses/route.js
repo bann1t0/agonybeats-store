@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/security";
 
 export async function GET() {
     try {
@@ -14,6 +15,12 @@ export async function GET() {
 
 export async function POST(req) {
     try {
+        // SECURITY: Only admins can create licenses
+        const session = await requireAdmin();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 401 });
+        }
+
         const body = await req.json();
         const { name, defaultPrice, features, description, isRecommended } = body;
 
@@ -27,8 +34,8 @@ export async function POST(req) {
                 defaultPrice: parseFloat(defaultPrice),
                 features: JSON.stringify(features || []),
                 description: description || "",
-                order: 0, // Could calculate max order + 1
-                isRecommended: !!isRecommended, // Ensure boolean value
+                order: 0,
+                isRecommended: !!isRecommended,
             }
         });
 
@@ -37,3 +44,4 @@ export async function POST(req) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
