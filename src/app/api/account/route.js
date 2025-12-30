@@ -8,11 +8,24 @@ export async function GET(req) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user?.id) {
+        if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const userId = session.user.id;
+        // Get user by id or email (fallback for OAuth users)
+        let userId = session.user.id;
+
+        if (!userId && session.user.email) {
+            const userByEmail = await prisma.user.findUnique({
+                where: { email: session.user.email },
+                select: { id: true }
+            });
+            userId = userByEmail?.id;
+        }
+
+        if (!userId) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
 
         // Fetch user data
         const user = await prisma.user.findUnique({
@@ -23,7 +36,6 @@ export async function GET(req) {
                 email: true,
                 image: true,
                 role: true,
-                createdAt: true,
                 twoFactorEnabled: true,
                 isSubscribed: true,
             }
@@ -75,13 +87,17 @@ export async function GET(req) {
             ? purchases.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]?.createdAt
             : null;
 
+        // Check if user has password
+        const userWithPassword = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { password: true }
+        });
+
         return NextResponse.json({
             user: {
                 ...user,
-                hasPassword: !!(await prisma.user.findUnique({
-                    where: { id: userId },
-                    select: { password: true }
-                }))?.password
+                createdAt: null, // Not stored for old users
+                hasPassword: !!userWithPassword?.password
             },
             stats: {
                 totalSpent: Math.round(totalSpent * 100) / 100,
@@ -105,14 +121,28 @@ export async function PUT(req) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user?.id) {
+        if (!session?.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Get user by id or email
+        let userId = session.user.id;
+        if (!userId && session.user.email) {
+            const userByEmail = await prisma.user.findUnique({
+                where: { email: session.user.email },
+                select: { id: true }
+            });
+            userId = userByEmail?.id;
+        }
+
+        if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const { name, image } = await req.json();
 
         const updatedUser = await prisma.user.update({
-            where: { id: session.user.id },
+            where: { id: userId },
             data: {
                 ...(name !== undefined && { name }),
                 ...(image !== undefined && { image }),
