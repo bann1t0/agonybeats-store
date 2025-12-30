@@ -27,72 +27,76 @@ export async function GET(req) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Fetch user data - only basic fields that always exist
+        // Fetch user data with all fields (some may be null for old users)
         const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                role: true,
-                isSubscribed: true,
-                password: true, // We'll use this to check hasPassword
-            }
+            where: { id: userId }
         });
 
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Try to get 2FA status, but don't fail if column doesn't exist
-        let twoFactorEnabled = false;
-        try {
-            const tfaCheck = await prisma.$queryRaw`
-                SELECT "twoFactorEnabled" FROM "User" WHERE id = ${userId}
-            `;
-            twoFactorEnabled = tfaCheck?.[0]?.twoFactorEnabled || false;
-        } catch (e) {
-            // Column might not exist yet - that's ok
-            twoFactorEnabled = false;
-        }
-
         // Get purchase statistics
-        const purchases = await prisma.purchase.findMany({
-            where: { userId },
-            select: {
-                amount: true,
-                createdAt: true,
-            }
-        });
+        let purchases = [];
+        try {
+            purchases = await prisma.purchase.findMany({
+                where: { userId },
+                select: {
+                    amount: true,
+                    createdAt: true,
+                }
+            });
+        } catch (e) {
+            console.error("Purchase query error:", e);
+        }
 
         const totalSpent = purchases.reduce((sum, p) => sum + (p.amount || 0), 0);
         const purchaseCount = purchases.length;
 
         // Get favorites count
-        const favoritesCount = await prisma.favorite.count({
-            where: { userId }
-        });
+        let favoritesCount = 0;
+        try {
+            favoritesCount = await prisma.favorite.count({
+                where: { userId }
+            });
+        } catch (e) {
+            console.error("Favorites query error:", e);
+        }
 
         // Get playlists count
-        const playlistsCount = await prisma.playlist.count({
-            where: { userId }
-        });
+        let playlistsCount = 0;
+        try {
+            playlistsCount = await prisma.playlist.count({
+                where: { userId }
+            });
+        } catch (e) {
+            console.error("Playlists query error:", e);
+        }
 
         // Get reviews count
-        const reviewsCount = await prisma.review.count({
-            where: { userId }
-        });
+        let reviewsCount = 0;
+        try {
+            reviewsCount = await prisma.review.count({
+                where: { userId }
+            });
+        } catch (e) {
+            console.error("Reviews query error:", e);
+        }
 
         // Get subscription info
-        const subscription = await prisma.subscription.findFirst({
-            where: { userId },
-            select: {
-                tierId: true,
-                status: true,
-                currentPeriodEnd: true,
-            }
-        });
+        let subscription = null;
+        try {
+            subscription = await prisma.subscription.findFirst({
+                where: { userId },
+                select: {
+                    tierId: true,
+                    status: true,
+                    currentPeriodEnd: true,
+                }
+            });
+        } catch (e) {
+            console.error("Subscription query error:", e);
+        }
 
         // Get last purchase date
         const lastPurchase = purchases.length > 0
@@ -102,13 +106,13 @@ export async function GET(req) {
         return NextResponse.json({
             user: {
                 id: user.id,
-                name: user.name,
-                email: user.email,
-                image: user.image,
-                role: user.role,
-                isSubscribed: user.isSubscribed,
-                twoFactorEnabled,
-                createdAt: null,
+                name: user.name || null,
+                email: user.email || null,
+                image: user.image || null,
+                role: user.role || "user",
+                isSubscribed: user.isSubscribed || false,
+                twoFactorEnabled: user.twoFactorEnabled || false,
+                createdAt: user.createdAt || null,
                 hasPassword: !!user.password
             },
             stats: {
@@ -124,7 +128,10 @@ export async function GET(req) {
 
     } catch (error) {
         console.error("Account API Error:", error);
-        return NextResponse.json({ error: "Failed to load account data: " + error.message }, { status: 500 });
+        return NextResponse.json({
+            error: "Failed to load account",
+            details: error.message
+        }, { status: 500 });
     }
 }
 
