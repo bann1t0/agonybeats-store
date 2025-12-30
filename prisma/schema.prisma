@@ -45,6 +45,11 @@ model User {
   isSubscribed  Boolean   @default(false)
   resetToken        String?
   resetTokenExpiry  DateTime?
+  // 2FA Fields
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  backupCodes       String?   // JSON array of hashed backup codes
+  createdAt     DateTime  @default(now())
   accounts      Account[]
   sessions      Session[]
   reviews       Review[]
