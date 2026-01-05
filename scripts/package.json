@@ -1,0 +1,12 @@
+{
+    "name": "agonybeats-audio-tools",
+    "version": "1.0.0",
+    "description": "Audio processing tools for AgonyBeats",
+    "scripts": {
+        "process": "node process-beat.js",
+        "process-all": "node process-all.js"
+    },
+    "dependencies": {
+        "fluent-ffmpeg": "^2.1.2"
+    }
+}
