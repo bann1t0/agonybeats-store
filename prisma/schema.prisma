@@ -78,7 +78,7 @@ model Beat {
   key       String
   price     Float
   cover     String   // Path to public/uploads/image.jpg
-  audio     String   // Path to public/uploads/beat.mp3 (Streaming)
+  audio     String?  // Path to public/uploads/beat.mp3 (Streaming) - Optional if auto-generated from WAV
   taggedAudio String? // Path to public/uploads/tagged_beat.mp3 (Free Download)
   wav       String?  // Path to public/uploads/beat.wav (Purchased)
   stems     String?  // Path to public/uploads/beat.zip (Purchased)
