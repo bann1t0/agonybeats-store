@@ -45,6 +45,7 @@ next-env.d.ts
 # Large media files (stored in R2)
 /Assets
 *.wav
+!public/tag/*.wav
 *.mp3
 *.flac
 *.zip
