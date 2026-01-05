@@ -4,6 +4,7 @@ public/beats
 public/beat.mp3
 Assets
 *.wav
+!public/tag/*.wav
 *.mp3
 *.flac
 *.zip
