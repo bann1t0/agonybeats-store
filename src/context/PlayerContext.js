@@ -26,6 +26,67 @@ export function PlayerProvider({ children }) {
         // Let's rely on StickyPlayer binding to this context. 
     }, []);
 
+    // Keyboard Shortcuts for Player
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Don't trigger if user is typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+                return;
+            }
+
+            switch (e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlayRef.current();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    if (audioRef.current) {
+                        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 5);
+                    }
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    if (audioRef.current) {
+                        audioRef.current.currentTime = Math.min(
+                            audioRef.current.duration || 0,
+                            audioRef.current.currentTime + 5
+                        );
+                    }
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (audioRef.current) {
+                        const newVol = Math.min(1, audioRef.current.volume + 0.1);
+                        audioRef.current.volume = newVol;
+                        setVolume(newVol);
+                    }
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (audioRef.current) {
+                        const newVol = Math.max(0, audioRef.current.volume - 0.1);
+                        audioRef.current.volume = newVol;
+                        setVolume(newVol);
+                    }
+                    break;
+                case 'KeyM':
+                    // Mute/unmute
+                    e.preventDefault();
+                    if (audioRef.current) {
+                        audioRef.current.muted = !audioRef.current.muted;
+                    }
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    // Ref for togglePlay to avoid stale closure in keyboard handler
+    const togglePlayRef = useRef(null);
+
     const togglePlay = () => {
         if (!currentBeat) return;
         if (isPlaying) {
@@ -38,6 +99,11 @@ export function PlayerProvider({ children }) {
             animationRef.current = requestAnimationFrame(whilePlaying);
         }
     };
+
+    // Keep togglePlayRef updated
+    useEffect(() => {
+        togglePlayRef.current = togglePlay;
+    });
 
     const playTrack = (beat) => {
         if (currentBeat?.id === beat.id) {

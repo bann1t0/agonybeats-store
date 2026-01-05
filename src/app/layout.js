@@ -6,6 +6,7 @@ import Navigation from "@/components/Navigation";
 import CartSidebar from "@/components/CartSidebar";
 import StickyPlayer from "@/components/StickyPlayer";
 import Footer from "@/components/Footer";
+import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
 // import NewsletterPopup from "@/components/NewsletterPopup"; // Removed - discount now on registration
 // import AffiliateTracker from "@/components/AffiliateTracker";
 
@@ -132,6 +133,7 @@ export default function RootLayout({ children }) {
           {children}
           <Footer />
           <StickyPlayer />
+          <KeyboardShortcutsHelp />
         </Providers>
       </body>
     </html>
