@@ -826,12 +826,18 @@ export default function AdminPage() {
 
                         <div className={styles.formGroup}>
                             <label>Audio File (Streaming/Untagged) {editingBeat && "(Leave empty to keep current)"}</label>
-                            <input name="audio" type="file" accept="audio/*" required={!editingBeat} className={styles.fileInput} />
+                            <input name="audio" type="file" accept="audio/*" className={styles.fileInput} />
+                            <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem' }}>
+                                Opzionale se carichi un file WAV (verrà generato automaticamente)
+                            </p>
                         </div>
 
                         <div className={styles.formGroup}>
                             <label>Tagged File (Free Download) {editingBeat && "(Leave empty to keep current)"}</label>
                             <input name="taggedAudio" type="file" accept="audio/*" className={styles.fileInput} />
+                            <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem' }}>
+                                Opzionale se carichi un file WAV (verrà generato automaticamente con tag ogni 30s)
+                            </p>
                         </div>
 
                         <div className={styles.formGroup}>
