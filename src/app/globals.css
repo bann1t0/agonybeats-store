@@ -232,3 +232,115 @@ select:focus-visible {
 *::after {
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
+
+/* ========================================
+   LIGHT THEME OVERRIDES
+   ======================================== */
+
+/* Hero Title - Dark text on light background */
+[data-theme="light"] h1 {
+  background: linear-gradient(180deg, #1e1e2e 0%, #3a3a5a 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  text-shadow: none !important;
+}
+
+/* Search Input - Dark background for contrast */
+[data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="search"],
+[data-theme="light"] input[type="email"],
+[data-theme="light"] input[type="password"] {
+  background: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--input-border) !important;
+}
+
+[data-theme="light"] input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Cards - White with shadows */
+[data-theme="light"] [class*="Card"],
+[data-theme="light"] [class*="card"] {
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Beat titles and text */
+[data-theme="light"] [class*="beatTitle"],
+[data-theme="light"] [class*="catTitle"] {
+  color: var(--text-primary) !important;
+  text-shadow: none !important;
+}
+
+/* Catalogue items */
+[data-theme="light"] [class*="catalogueItem"],
+[data-theme="light"] [class*="catItem"] {
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+}
+
+[data-theme="light"] [class*="catalogueItem"]:hover,
+[data-theme="light"] [class*="catItem"]:hover {
+  background: var(--card-hover) !important;
+}
+
+/* Section titles */
+[data-theme="light"] [class*="Title"],
+[data-theme="light"] [class*="title"] {
+  color: var(--text-primary) !important;
+}
+
+/* Meta text */
+[data-theme="light"] [class*="Meta"],
+[data-theme="light"] [class*="meta"] {
+  color: var(--text-secondary) !important;
+}
+
+/* Buttons - Keep accent colors but adjust */
+[data-theme="light"] button:not([class*="Toggle"]) {
+  color: var(--text-primary);
+}
+
+/* Price displays */
+[data-theme="light"] [class*="Price"],
+[data-theme="light"] [class*="price"] {
+  color: var(--accent-primary) !important;
+}
+
+/* Player backgrounds */
+[data-theme="light"] [class*="Player"],
+[data-theme="light"] [class*="player"] {
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+}
+
+/* Dropdown menus */
+[data-theme="light"] [class*="dropdown"],
+[data-theme="light"] [class*="Dropdown"] {
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* Navigation bar */
+[data-theme="light"] header,
+[data-theme="light"] [class*="header"],
+[data-theme="light"] nav {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  border-color: var(--card-border) !important;
+}
+
+/* Links in light mode */
+[data-theme="light"] a {
+  color: var(--text-primary);
+}
+
+/* Footer */
+[data-theme="light"] footer {
+  background: var(--background-secondary) !important;
+  border-color: var(--card-border) !important;
+}
