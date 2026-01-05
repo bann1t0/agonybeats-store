@@ -40,6 +40,10 @@ export async function POST(req) {
             console.error("No audio file:", { audio, wav });
             return NextResponse.json({ error: "Either audio or WAV file is required" }, { status: 400 });
         }
+        // Use wav as fallback for audio if not provided (for streaming)
+        // This handles the case where MP3 conversion failed or wasn't done
+        const audioPath = audio || wav;
+        const taggedPath = body.taggedAudio || wav; // Also fallback tagged to wav
 
         const beat = await prisma.beat.create({
             data: {
@@ -48,8 +52,8 @@ export async function POST(req) {
                 key,
                 price: price ? parseFloat(price) : 0,
                 cover,
-                audio,
-                taggedAudio: body.taggedAudio || null,
+                audio: audioPath, // Required field - use wav as fallback
+                taggedAudio: taggedPath,
                 wav: body.wav || null,
                 stems: body.stems || null,
                 genre: genre || "Trap",
