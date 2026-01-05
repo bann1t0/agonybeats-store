@@ -14,6 +14,8 @@ export default function AdminPage() {
     const [beats, setBeats] = useState([]);
     const [editingBeat, setEditingBeat] = useState(null); // If set, we are in "Edit Mode"
     const [coverPreview, setCoverPreview] = useState(null); // Preview for cover upload
+    const [processingAudio, setProcessingAudio] = useState(false); // WAV to MP3 conversion
+    const [processingProgress, setProcessingProgress] = useState(0); // Progress 0-100
 
     // Icons
     const RocketIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>;
@@ -288,11 +290,45 @@ export default function AdminPage() {
                 taggedAudioPath = await uploadFileDirect(taggedFile);
             }
 
-            // 4. Upload WAV (optional) - DIRECT TO R2
+            // 4. Upload WAV - AUTO CONVERT TO MP3 with tag!
             const wavFile = formData.get("wav");
             if (wavFile && wavFile.size > 0) {
+                // First upload the original WAV
                 setMessage("Uploading WAV file...");
                 wavPath = await uploadFileDirect(wavFile);
+
+                // Auto-convert WAV to MP3 with tag
+                setMessage("🎵 Processing WAV → Creating MP3 files with voice tag...");
+                setProcessingAudio(true);
+                setProcessingProgress(0);
+
+                try {
+                    // Dynamic import to avoid SSR issues
+                    const { processWavFile, blobToFile } = await import('@/lib/audio-processor');
+
+                    const { streamingMp3, taggedMp3 } = await processWavFile(wavFile, (progress) => {
+                        setProcessingProgress(progress);
+                    });
+
+                    // Upload the streaming MP3
+                    setMessage("Uploading MP3 (streaming)...");
+                    const baseName = wavFile.name.replace(/\.wav$/i, '');
+                    const streamingFile = blobToFile(streamingMp3, `${baseName}.mp3`);
+                    audioPath = await uploadFileDirect(streamingFile);
+
+                    // Upload the tagged MP3
+                    setMessage("Uploading MP3 (tagged)...");
+                    const taggedMp3File = blobToFile(taggedMp3, `${baseName}_tagged.mp3`);
+                    taggedAudioPath = await uploadFileDirect(taggedMp3File);
+
+                    setMessage("✅ Audio processing complete!");
+                } catch (procError) {
+                    console.error("Audio processing error:", procError);
+                    setMessage("⚠️ Could not auto-convert audio: " + procError.message + ". Please upload MP3 manually.");
+                } finally {
+                    setProcessingAudio(false);
+                    setProcessingProgress(0);
+                }
             }
 
             // 5. Upload Stems (optional) - DIRECT TO R2
@@ -801,6 +837,25 @@ export default function AdminPage() {
                         <div className={styles.formGroup}>
                             <label>WAV File (Premium License) {editingBeat && "(Leave empty to keep current)"}</label>
                             <input name="wav" type="file" accept=".wav,audio/wav" className={styles.fileInput} />
+                            <p style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '0.5rem' }}>
+                                ✨ Caricando un WAV, verranno creati automaticamente i file MP3 (streaming + tagged ogni 30s)
+                            </p>
+                            {processingAudio && (
+                                <div style={{ marginTop: '0.75rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                                        <span style={{ color: '#0ea5e9', fontSize: '0.85rem' }}>🎵 Processing audio...</span>
+                                        <span style={{ color: '#888', fontSize: '0.85rem' }}>{processingProgress}%</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: '6px', background: '#333', borderRadius: '3px', overflow: 'hidden' }}>
+                                        <div style={{
+                                            width: `${processingProgress}%`,
+                                            height: '100%',
+                                            background: 'linear-gradient(90deg, #0ea5e9, #8b5cf6)',
+                                            transition: 'width 0.3s'
+                                        }}></div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className={styles.formGroup}>
