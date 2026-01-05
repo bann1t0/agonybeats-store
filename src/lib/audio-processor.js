@@ -3,8 +3,8 @@
  * Uses Web Audio API and lamejs for browser-based processing
  */
 
-// Tag file URL (encoded for spaces)
-const TAG_URL = '/tag/tag%20agony%20new.wav';
+// Tag file URL - renamed to avoid URL encoding issues
+const TAG_URL = '/tag/agony-tag.wav';
 const TAG_INTERVAL_SECONDS = 30;
 const OUTPUT_BITRATE = 192;
 
