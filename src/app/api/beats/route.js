@@ -27,12 +27,18 @@ export async function POST(req) {
         }
 
         const body = await req.json();
-        const { title, bpm, key, price, cover, audio, genre } = body;
+        const { title, bpm, key, price, cover, audio, genre, wav } = body;
 
-        // Validation Check
-        if (!title || !bpm || !key || !cover || !audio) {
-            console.error("Missing fields:", { title, bpm, key, cover, audio });
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        // Validation Check - audio is optional if wav is provided (MP3 is auto-generated)
+        if (!title || !bpm || !key || !cover) {
+            console.error("Missing fields:", { title, bpm, key, cover });
+            return NextResponse.json({ error: "Missing required fields (title, bpm, key, cover)" }, { status: 400 });
+        }
+
+        // Either audio or wav must be provided
+        if (!audio && !wav) {
+            console.error("No audio file:", { audio, wav });
+            return NextResponse.json({ error: "Either audio or WAV file is required" }, { status: 400 });
         }
 
         const beat = await prisma.beat.create({
