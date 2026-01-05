@@ -1729,3 +1729,171 @@
     font-size: 1.5rem;
   }
 }
+
+/* ========================================
+   LIGHT THEME SPECIFIC OVERRIDES
+   ======================================== */
+
+/* Search Input - Clean style for light mode */
+:global([data-theme="light"]) .searchInput {
+  background: #ffffff !important;
+  color: #1e1e2e !important;
+  border: 2px solid #e0e0e0 !important;
+  border-image: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+:global([data-theme="light"]) .searchInput:focus {
+  border-color: #0066cc !important;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15) !important;
+}
+
+:global([data-theme="light"]) .searchInput::placeholder {
+  color: #8a8a9a !important;
+}
+
+/* CTA Button - Solid style for light mode */
+:global([data-theme="light"]) .ctaButton {
+  background: #0066cc !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.2) !important;
+}
+
+:global([data-theme="light"]) .ctaButton:hover {
+  background: #0052a3 !important;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3) !important;
+}
+
+/* Featured Beat Card - White background for light mode */
+:global([data-theme="light"]) .beatCard {
+  background: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+:global([data-theme="light"]) .beatCard:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+:global([data-theme="light"]) .beatInfo {
+  background: #ffffff !important;
+}
+
+:global([data-theme="light"]) .beatTitle {
+  color: #1e1e2e !important;
+  text-shadow: none !important;
+}
+
+:global([data-theme="light"]) .beatMeta {
+  color: #5a5a6e !important;
+}
+
+:global([data-theme="light"]) .beatPrice {
+  color: #0066cc !important;
+}
+
+/* Custom Player in Card */
+:global([data-theme="light"]) .customPlayer {
+  background: #f5f5f5 !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+:global([data-theme="light"]) .playCircle {
+  border-color: #0066cc !important;
+  color: #0066cc !important;
+}
+
+:global([data-theme="light"]) .playCircle:hover {
+  background: #0066cc !important;
+  color: #ffffff !important;
+}
+
+:global([data-theme="light"]) .playing {
+  background: #0066cc !important;
+  color: #ffffff !important;
+}
+
+:global([data-theme="light"]) .timeDisplay {
+  color: #5a5a6e !important;
+}
+
+:global([data-theme="light"]) .soundbarInput {
+  background: #e0e0e0 !important;
+}
+
+/* Catalogue Section */
+:global([data-theme="light"]) .catalogueSection {
+  background: transparent !important;
+}
+
+:global([data-theme="light"]) .catalogueTitle {
+  color: #1e1e2e !important;
+}
+
+:global([data-theme="light"]) .catalogueItem {
+  background: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+:global([data-theme="light"]) .catalogueItem:hover {
+  background: #f8f8f8 !important;
+  border-color: #d0d0d0 !important;
+}
+
+:global([data-theme="light"]) .catTitle {
+  color: #1e1e2e !important;
+}
+
+:global([data-theme="light"]) .catMeta {
+  color: #5a5a6e !important;
+}
+
+:global([data-theme="light"]) .catPrice {
+  color: #0066cc !important;
+  border-color: #0066cc !important;
+}
+
+:global([data-theme="light"]) .catPrice:hover {
+  background: #0066cc !important;
+  color: #ffffff !important;
+}
+
+:global([data-theme="light"]) .catAddBtn {
+  border-color: #1e1e2e !important;
+  color: #1e1e2e !important;
+}
+
+:global([data-theme="light"]) .catAddBtn:hover {
+  background: #1e1e2e !important;
+  color: #ffffff !important;
+}
+
+/* Progress bars and sliders */
+:global([data-theme="light"]) .catProgressBar,
+:global([data-theme="light"]) .progressBar {
+  background: #e0e0e0 !important;
+}
+
+:global([data-theme="light"]) .catTime {
+  color: #5a5a6e !important;
+}
+
+/* Volume controls */
+:global([data-theme="light"]) .catVolumeInput,
+:global([data-theme="light"]) .volumeInputSmall,
+:global([data-theme="light"]) .volumeBar {
+  background: #e0e0e0 !important;
+}
+
+/* Add to cart button adjustments */
+:global([data-theme="light"]) .addToCartBtn {
+  background: #0066cc !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+:global([data-theme="light"]) .addToCartBtn:hover {
+  background: #0052a3 !important;
+}
