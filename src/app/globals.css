@@ -49,45 +49,45 @@
 }
 
 [data-theme="light"] {
-  /* Colors */
-  --background: #f5f5f7;
+  /* Colors - Warm cream tones for elegance and readability */
+  --background: #f8f6f3;
   --background-secondary: #ffffff;
-  --foreground: #1a1a2e;
-  --text-primary: #1a1a2e;
-  --text-secondary: #4a4a5a;
-  --text-muted: #888888;
+  --foreground: #2d2d3a;
+  --text-primary: #1e1e2e;
+  --text-secondary: #5a5a6e;
+  --text-muted: #8a8a9a;
 
-  /* Accent Colors - Same but adjusted for light */
-  --accent-primary: #0284c7;
-  --accent-secondary: #7c3aed;
+  /* Accent Colors - Rich and vibrant for light mode */
+  --accent-primary: #0066cc;
+  --accent-secondary: #6d28d9;
   --accent-success: #059669;
   --accent-warning: #d97706;
   --accent-danger: #dc2626;
 
-  /* Neon Effects - Softer for light mode */
-  --neon-blue: #0ea5e9;
-  --neon-purple: #a855f7;
+  /* Neon Effects - Deeper colors for light mode */
+  --neon-blue: #0284c7;
+  --neon-purple: #7c3aed;
 
-  /* Glass Effect */
-  --glass-bg: rgba(0, 0, 0, 0.03);
+  /* Glass Effect - Subtle shadows instead of transparency */
+  --glass-bg: rgba(255, 255, 255, 0.95);
   --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-hover: rgba(0, 0, 0, 0.05);
+  --glass-hover: rgba(0, 0, 0, 0.06);
 
-  /* Cards */
+  /* Cards - Warm white with subtle shadow */
   --card-bg: #ffffff;
-  --card-border: rgba(0, 0, 0, 0.1);
-  --card-hover: rgba(14, 165, 233, 0.05);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --card-hover: rgba(102, 102, 204, 0.1);
 
-  /* Inputs */
-  --input-bg: #ffffff;
+  /* Inputs - Light gray background for contrast */
+  --input-bg: #f5f5f5;
   --input-border: rgba(0, 0, 0, 0.15);
-  --input-focus: #0284c7;
+  --input-focus: #0066cc;
 
-  /* Shadows */
+  /* Shadows - Elegant shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
-  --shadow-glow: 0 0 15px rgba(14, 165, 233, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 20px rgba(102, 102, 204, 0.2);
 }
 
 /* Twinkling Stars Animation - Only for dark mode */
@@ -172,9 +172,12 @@ body {
   background-position: 0 0, 40px 60px, 130px 270px;
 }
 
-/* Light mode clean background */
+/* Light mode elegant background */
 [data-theme="light"] body {
-  background-image: none;
+  background-image:
+    linear-gradient(135deg, rgba(102, 102, 204, 0.03) 0%, transparent 50%),
+    linear-gradient(225deg, rgba(102, 204, 204, 0.03) 0%, transparent 50%);
+  background-attachment: fixed;
 }
 
 @keyframes meteor {
