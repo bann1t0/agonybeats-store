@@ -3,10 +3,8 @@
  * Uses Web Audio API and lamejs for browser-based processing
  */
 
-import lamejs from 'lamejs';
-
-// Tag file URL (relative to public folder)
-const TAG_URL = '/tag/tag agony new.wav';
+// Tag file URL (encoded for spaces)
+const TAG_URL = '/tag/tag%20agony%20new.wav';
 const TAG_INTERVAL_SECONDS = 30;
 const OUTPUT_BITRATE = 192;
 
@@ -23,9 +21,10 @@ async function loadAudioBuffer(file) {
  * Load the tag audio from the server
  */
 async function loadTagBuffer() {
+    console.log('[AudioProcessor] Loading tag from:', TAG_URL);
     const response = await fetch(TAG_URL);
     if (!response.ok) {
-        throw new Error('Failed to load voice tag file');
+        throw new Error(`Failed to load voice tag file: ${response.status} ${response.statusText}`);
     }
     const arrayBuffer = await response.arrayBuffer();
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -53,7 +52,6 @@ function mixTagIntoAudio(mainBuffer, tagBuffer, intervalSeconds = 30, tagVolume 
     }
 
     // Calculate tag insertion points
-    const tagLength = tagBuffer.length;
     const tagSampleRate = tagBuffer.sampleRate;
 
     // Resample tag if needed (if sample rates don't match)
@@ -78,6 +76,7 @@ function mixTagIntoAudio(mainBuffer, tagBuffer, intervalSeconds = 30, tagVolume 
 
     // Insert tag at each interval
     const numTags = Math.floor(duration / intervalSeconds);
+    console.log(`[AudioProcessor] Inserting ${Math.max(1, numTags)} tags every ${intervalSeconds}s`);
 
     for (let i = 0; i < Math.max(1, numTags); i++) {
         const insertSample = Math.floor(i * intervalSeconds * sampleRate);
@@ -101,12 +100,22 @@ function mixTagIntoAudio(mainBuffer, tagBuffer, intervalSeconds = 30, tagVolume 
 }
 
 /**
- * Encode AudioBuffer to MP3 using lamejs
+ * Encode AudioBuffer to MP3 using lamejs (dynamically loaded)
  */
-function encodeToMp3(audioBuffer, bitrate = 192) {
+async function encodeToMp3(audioBuffer, bitrate = 192) {
+    // Dynamic import of lamejs
+    const lamejs = await import('lamejs');
+    const Mp3Encoder = lamejs.default?.Mp3Encoder || lamejs.Mp3Encoder;
+
+    if (!Mp3Encoder) {
+        throw new Error('lamejs Mp3Encoder not found');
+    }
+
     const numChannels = audioBuffer.numberOfChannels;
     const sampleRate = audioBuffer.sampleRate;
     const samples = audioBuffer.length;
+
+    console.log(`[AudioProcessor] Encoding MP3: ${numChannels}ch, ${sampleRate}Hz, ${samples} samples`);
 
     // Get channel data
     const leftChannel = audioBuffer.getChannelData(0);
@@ -122,7 +131,7 @@ function encodeToMp3(audioBuffer, bitrate = 192) {
     }
 
     // Create MP3 encoder
-    const mp3encoder = new lamejs.Mp3Encoder(numChannels > 1 ? 2 : 1, sampleRate, bitrate);
+    const mp3encoder = new Mp3Encoder(numChannels > 1 ? 2 : 1, sampleRate, bitrate);
 
     const mp3Data = [];
     const sampleBlockSize = 1152; // MP3 frame size
@@ -150,8 +159,8 @@ function encodeToMp3(audioBuffer, bitrate = 192) {
     }
 
     // Combine all chunks
-    const totalLength = mp3Data.reduce((acc, buf) => acc + buf.length, 0);
     const mp3Blob = new Blob(mp3Data, { type: 'audio/mp3' });
+    console.log(`[AudioProcessor] MP3 created: ${mp3Blob.size} bytes`);
 
     return mp3Blob;
 }
@@ -163,41 +172,52 @@ function encodeToMp3(audioBuffer, bitrate = 192) {
  * @returns {Promise<{streamingMp3: Blob, taggedMp3: Blob}>}
  */
 export async function processWavFile(wavFile, onProgress = () => { }) {
+    console.log('[AudioProcessor] Starting processing of:', wavFile.name);
+
     try {
         onProgress(5);
 
         // Load the main audio
+        console.log('[AudioProcessor] Loading main audio buffer...');
         const mainBuffer = await loadAudioBuffer(wavFile);
+        console.log(`[AudioProcessor] Loaded: ${mainBuffer.duration.toFixed(2)}s, ${mainBuffer.sampleRate}Hz`);
         onProgress(20);
 
         // Create untagged streaming MP3
+        console.log('[AudioProcessor] Creating streaming MP3...');
         onProgress(30);
-        const streamingMp3 = encodeToMp3(mainBuffer, OUTPUT_BITRATE);
+        const streamingMp3 = await encodeToMp3(mainBuffer, OUTPUT_BITRATE);
         onProgress(50);
 
         // Load tag and mix
         let taggedMp3;
         try {
+            console.log('[AudioProcessor] Loading tag for tagged version...');
             const tagBuffer = await loadTagBuffer();
+            console.log(`[AudioProcessor] Tag loaded: ${tagBuffer.duration.toFixed(2)}s`);
             onProgress(60);
 
+            console.log('[AudioProcessor] Mixing tag into audio...');
             const mixedBuffer = mixTagIntoAudio(mainBuffer, tagBuffer, TAG_INTERVAL_SECONDS);
             onProgress(80);
 
-            taggedMp3 = encodeToMp3(mixedBuffer, OUTPUT_BITRATE);
+            console.log('[AudioProcessor] Creating tagged MP3...');
+            taggedMp3 = await encodeToMp3(mixedBuffer, OUTPUT_BITRATE);
         } catch (tagError) {
-            console.warn('Could not load tag, creating untagged version:', tagError);
+            console.warn('[AudioProcessor] Could not process tag:', tagError);
+            console.log('[AudioProcessor] Using streaming version as tagged');
             taggedMp3 = streamingMp3;
         }
 
         onProgress(100);
+        console.log('[AudioProcessor] Processing complete!');
 
         return {
             streamingMp3,
             taggedMp3
         };
     } catch (error) {
-        console.error('Audio processing error:', error);
+        console.error('[AudioProcessor] Fatal error:', error);
         throw error;
     }
 }
