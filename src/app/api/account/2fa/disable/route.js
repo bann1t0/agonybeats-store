@@ -9,55 +9,54 @@ export async function POST(req) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user?.id) {
+        if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Get user by id or email
+        let userId = session.user.id;
+        if (!userId && session.user.email) {
+            const userByEmail = await prisma.user.findUnique({
+                where: { email: session.user.email },
+                select: { id: true }
+            });
+            userId = userByEmail?.id;
+        }
+
+        if (!userId) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
         const { password } = await req.json();
 
         if (!password) {
-            return NextResponse.json({
-                error: "Password is required to disable 2FA"
-            }, { status: 400 });
+            return NextResponse.json({ error: "Password is required" }, { status: 400 });
         }
 
         // Get user
         const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
+            where: { id: userId },
             select: {
-                twoFactorEnabled: true,
-                password: true
+                password: true,
+                twoFactorEnabled: true
             }
         });
 
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        if (!user.twoFactorEnabled) {
+        if (!user?.twoFactorEnabled) {
             return NextResponse.json({
-                error: "2FA is not enabled on this account"
+                error: "2FA is not enabled"
             }, { status: 400 });
         }
 
         // Verify password
-        if (!user.password) {
-            return NextResponse.json({
-                error: "Account has no password set"
-            }, { status: 400 });
-        }
-
-        const isValidPassword = await bcrypt.compare(password, user.password);
-
-        if (!isValidPassword) {
-            return NextResponse.json({
-                error: "Incorrect password"
-            }, { status: 400 });
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+            return NextResponse.json({ error: "Incorrect password" }, { status: 400 });
         }
 
         // Disable 2FA
         await prisma.user.update({
-            where: { id: session.user.id },
+            where: { id: userId },
             data: {
                 twoFactorEnabled: false,
                 twoFactorSecret: null,
@@ -67,7 +66,7 @@ export async function POST(req) {
 
         return NextResponse.json({
             success: true,
-            message: "Two-factor authentication has been disabled"
+            message: "2FA disabled successfully"
         });
 
     } catch (error) {

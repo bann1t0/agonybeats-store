@@ -10,13 +10,27 @@ export async function POST(req) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user?.id) {
+        if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Get user by id or email
+        let userId = session.user.id;
+        if (!userId && session.user.email) {
+            const userByEmail = await prisma.user.findUnique({
+                where: { email: session.user.email },
+                select: { id: true }
+            });
+            userId = userByEmail?.id;
+        }
+
+        if (!userId) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
         // Check if user already has 2FA enabled
         const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
+            where: { id: userId },
             select: {
                 twoFactorEnabled: true,
                 email: true,
@@ -50,7 +64,7 @@ export async function POST(req) {
 
         // Store secret temporarily (not enabled yet)
         await prisma.user.update({
-            where: { id: session.user.id },
+            where: { id: userId },
             data: { twoFactorSecret: secret.base32 }
         });
 

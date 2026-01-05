@@ -105,6 +105,12 @@
     gap: 0.4rem;
 }
 
+.metaIcon {
+    display: flex;
+    align-items: center;
+    color: #0ea5e9;
+}
+
 /* Stats Grid */
 .statsGrid {
     display: grid;

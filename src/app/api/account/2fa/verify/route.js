@@ -6,80 +6,81 @@ import speakeasy from "speakeasy";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
-// Generate backup codes
-function generateBackupCodes(count = 10) {
-    const codes = [];
-    for (let i = 0; i < count; i++) {
-        // Generate 8-character alphanumeric code
-        const code = crypto.randomBytes(4).toString('hex').toUpperCase();
-        codes.push(code);
-    }
-    return codes;
-}
-
-// POST /api/account/2fa/verify - Verify TOTP and enable 2FA
+// POST /api/account/2fa/verify - Verify 2FA code and enable
 export async function POST(req) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user?.id) {
+        if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Get user by id or email
+        let userId = session.user.id;
+        if (!userId && session.user.email) {
+            const userByEmail = await prisma.user.findUnique({
+                where: { email: session.user.email },
+                select: { id: true }
+            });
+            userId = userByEmail?.id;
+        }
+
+        if (!userId) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
         const { code } = await req.json();
 
-        if (!code) {
-            return NextResponse.json({ error: "Verification code required" }, { status: 400 });
+        if (!code || code.length !== 6) {
+            return NextResponse.json({ error: "Invalid verification code" }, { status: 400 });
         }
 
-        // Get user with secret
+        // Get user with 2FA secret
         const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
+            where: { id: userId },
             select: {
-                twoFactorEnabled: true,
-                twoFactorSecret: true
+                twoFactorSecret: true,
+                twoFactorEnabled: true
             }
         });
 
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        if (user.twoFactorEnabled) {
-            return NextResponse.json({ error: "2FA is already enabled" }, { status: 400 });
-        }
-
-        if (!user.twoFactorSecret) {
+        if (!user?.twoFactorSecret) {
             return NextResponse.json({
-                error: "Please set up 2FA first by calling /api/account/2fa/setup"
+                error: "Please start 2FA setup first"
             }, { status: 400 });
         }
 
-        // Verify the TOTP code
+        if (user.twoFactorEnabled) {
+            return NextResponse.json({
+                error: "2FA is already enabled"
+            }, { status: 400 });
+        }
+
+        // Verify the code
         const verified = speakeasy.totp.verify({
             secret: user.twoFactorSecret,
             encoding: 'base32',
             token: code,
-            window: 2 // Allow 1 code before/after for clock skew
+            window: 2
         });
 
         if (!verified) {
-            return NextResponse.json({
-                error: "Invalid verification code. Please try again."
-            }, { status: 400 });
+            return NextResponse.json({ error: "Invalid verification code" }, { status: 400 });
         }
 
         // Generate backup codes
-        const backupCodes = generateBackupCodes(10);
+        const backupCodes = [];
+        const hashedBackupCodes = [];
 
-        // Hash backup codes for storage
-        const hashedBackupCodes = await Promise.all(
-            backupCodes.map(code => bcrypt.hash(code, 10))
-        );
+        for (let i = 0; i < 10; i++) {
+            const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+            backupCodes.push(code);
+            hashedBackupCodes.push(await bcrypt.hash(code, 10));
+        }
 
-        // Enable 2FA and store backup codes
+        // Enable 2FA
         await prisma.user.update({
-            where: { id: session.user.id },
+            where: { id: userId },
             data: {
                 twoFactorEnabled: true,
                 backupCodes: JSON.stringify(hashedBackupCodes)
@@ -88,9 +89,8 @@ export async function POST(req) {
 
         return NextResponse.json({
             success: true,
-            message: "Two-factor authentication enabled successfully!",
-            backupCodes: backupCodes, // Return plain backup codes ONCE (user must save them)
-            warning: "Save these backup codes in a safe place. They will not be shown again!"
+            message: "2FA enabled successfully",
+            backupCodes
         });
 
     } catch (error) {
