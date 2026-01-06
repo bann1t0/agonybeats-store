@@ -33,9 +33,16 @@ export async function POST(req) {
 
         // SECURITY: Validate content type to prevent malicious uploads
         const allowedTypes = [
+            // Images
             'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+            // Audio formats (for beats and stems)
             'audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/x-wav',
-            'application/zip', 'application/x-zip-compressed'
+            'audio/flac', 'audio/x-flac', 'audio/aiff', 'audio/x-aiff',
+            'audio/ogg', 'audio/aac', 'audio/x-m4a', 'audio/mp4',
+            // Archive formats (for stems packages)
+            'application/zip', 'application/x-zip-compressed',
+            'application/x-rar-compressed', 'application/x-7z-compressed',
+            'application/octet-stream' // Generic binary (fallback for some browsers)
         ];
 
         if (contentType && !allowedTypes.includes(contentType)) {
