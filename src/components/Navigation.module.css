@@ -186,3 +186,55 @@
     background: rgba(255, 255, 255, 0.1);
     margin: 0.5rem 0;
 }
+
+/* ========================================
+   LIGHT THEME OVERRIDES
+   ======================================== */
+
+:global([data-theme="light"]) .header {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+:global([data-theme="light"]) .navLink {
+    color: #1e1e2e !important;
+}
+
+:global([data-theme="light"]) .navLink:hover {
+    color: #0066cc !important;
+}
+
+:global([data-theme="light"]) .cartButton {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    color: #1e1e2e !important;
+}
+
+:global([data-theme="light"]) .cartButton:hover {
+    background: rgba(102, 0, 204, 0.08) !important;
+    border-color: #6600cc !important;
+    color: #1e1e2e !important;
+}
+
+:global([data-theme="light"]) .dropdownMenu {
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+:global([data-theme="light"]) .dropdownItem {
+    color: #1e1e2e !important;
+}
+
+:global([data-theme="light"]) .dropdownItem:hover {
+    background: rgba(0, 102, 204, 0.08) !important;
+    color: #0066cc !important;
+}
+
+:global([data-theme="light"]) .dropdownDivider {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+:global([data-theme="light"]) .logo {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
