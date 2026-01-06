@@ -42,11 +42,20 @@ export async function POST(req) {
             // Archive formats (for stems packages)
             'application/zip', 'application/x-zip-compressed',
             'application/x-rar-compressed', 'application/x-7z-compressed',
+            'application/vnd.rar', 'application/x-rar', // Additional RAR MIME types
             'application/octet-stream' // Generic binary (fallback for some browsers)
         ];
 
-        if (contentType && !allowedTypes.includes(contentType)) {
-            return NextResponse.json({ error: "File type not allowed" }, { status: 400 });
+        // Also allow by file extension for cases where browser sends wrong MIME type
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp3', '.wav', '.flac', '.aiff', '.ogg', '.aac', '.m4a', '.zip', '.rar', '.7z'];
+        const fileExtension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+        const hasAllowedExtension = allowedExtensions.includes(fileExtension);
+
+        console.log(`Upload request - filename: ${filename}, contentType: ${contentType}, extension: ${fileExtension}`);
+
+        if (contentType && !allowedTypes.includes(contentType) && !hasAllowedExtension) {
+            console.log(`Rejected upload - contentType: ${contentType} not in allowed list and extension ${fileExtension} not allowed`);
+            return NextResponse.json({ error: `File type not allowed: ${contentType}` }, { status: 400 });
         }
 
         // Generate unique filename
