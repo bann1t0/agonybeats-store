@@ -46,6 +46,12 @@ function HomeContent() {
   const [beatCatalogue, setBeatCatalogue] = useState([]);
   // Separate full catalogue state to keep track of all beats for filtering
   const [allBeats, setAllBeats] = useState([]);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalBeats, setTotalBeats] = useState(0);
+  const BEATS_PER_PAGE = 20;
   const [featuredBeatData, setFeaturedBeatData] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -145,36 +151,43 @@ function HomeContent() {
     }
   }
 
-  // Fetch Beats
+  // Fetch Beats with Pagination
   useEffect(() => {
     async function fetchBeats() {
       try {
-        const res = await fetch("/api/beats");
+        // Fetch paginated beats for catalogue
+        const res = await fetch(`/api/beats?page=${currentPage}&limit=${BEATS_PER_PAGE}`);
         if (res.ok) {
           const data = await res.json();
-          if (data && data.length > 0) {
-            setAllBeats(data);
 
-            // 1. Find Manual Featured Beat
-            let selectedFeatured = data.find(b => b.isFeatured);
+          if (data.beats && data.beats.length > 0) {
+            setAllBeats(data.beats);
+            setTotalPages(data.pagination.totalPages);
+            setTotalBeats(data.pagination.total);
 
-            // 2. Fallback: If no manual featured, pick random (or first)
-            if (!selectedFeatured && data.length > 0) {
-              const randomIndex = Math.floor(Math.random() * data.length);
-              selectedFeatured = data[randomIndex];
-            }
-
-            if (selectedFeatured) {
+            // 1. Find Manual Featured Beat (only on first page)
+            let selectedFeatured = null;
+            if (currentPage === 1) {
+              selectedFeatured = data.beats.find(b => b.isFeatured);
+              // 2. Fallback: If no manual featured, pick first
+              if (!selectedFeatured && data.beats.length > 0) {
+                selectedFeatured = data.beats[0];
+              }
               setFeaturedBeatData(selectedFeatured);
-              // Filter catalogue to exclude the featured one
-              const filteredCatalogue = data.filter(b => b.id !== selectedFeatured.id);
-              setBeatCatalogue(filteredCatalogue);
-            } else {
-              // Should not happen if data.length > 0, but safe fallback
-              setFeaturedBeatData(data[0]);
-              setBeatCatalogue(data.slice(1));
             }
 
+            // Filter catalogue to exclude the featured one (only on page 1)
+            const filteredCatalogue = currentPage === 1 && selectedFeatured
+              ? data.beats.filter(b => b.id !== selectedFeatured.id)
+              : data.beats;
+            setBeatCatalogue(filteredCatalogue);
+
+          } else if (data && Array.isArray(data) && data.length > 0) {
+            // Fallback for backwards compatibility
+            setAllBeats(data);
+            const selectedFeatured = data.find(b => b.isFeatured) || data[0];
+            setFeaturedBeatData(selectedFeatured);
+            setBeatCatalogue(data.filter(b => b.id !== selectedFeatured.id));
           } else {
             setAllBeats([]);
             setBeatCatalogue([]);
@@ -186,7 +199,7 @@ function HomeContent() {
       }
     }
     fetchBeats();
-  }, []); // Remove dependency on setCurrentBeat to avoid loop
+  }, [currentPage]); // Re-fetch when page changes
 
   // Filter Logic (Triggered by appliedFilters)
   useEffect(() => {
@@ -229,6 +242,7 @@ function HomeContent() {
   }, [allBeats, featuredBeatData, appliedFilters, searchTerm]);
 
   const applyFilters = () => {
+    setCurrentPage(1); // Reset to page 1 when applying filters
     setAppliedFilters({
       genre: pendingGenre,
       bpmMin: pendingBpmMin,
@@ -242,6 +256,7 @@ function HomeContent() {
     setPendingBpmMin("");
     setPendingBpmMax("");
     setPendingKey("");
+    setCurrentPage(1); // Reset to page 1 when resetting filters
     setAppliedFilters({
       genre: "",
       bpmMin: "",
@@ -607,6 +622,39 @@ function HomeContent() {
               );
             })}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button
+                className={styles.pageBtn}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                ← PREV
+              </button>
+
+              <div className={styles.pageNumbers}>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    className={`${styles.pageNum} ${currentPage === page ? styles.pageNumActive : ''}`}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                NEXT →
+              </button>
+            </div>
+          )}
         </section>
 
         <div className={styles.chromaticSeparator}></div>

@@ -103,7 +103,7 @@ export default function AdminPage() {
     // Fetch beats on load
     async function fetchBeats() {
         try {
-            const res = await fetch("/api/beats");
+            const res = await fetch("/api/beats?all=true");
             if (res.ok) {
                 const data = await res.json();
                 setBeats(data);

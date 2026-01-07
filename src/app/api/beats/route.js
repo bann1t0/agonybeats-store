@@ -2,17 +2,51 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/security";
 
-export async function GET() {
+export async function GET(req) {
     try {
+        const { searchParams } = new URL(req.url);
+        const page = parseInt(searchParams.get('page')) || 1;
+        const limit = parseInt(searchParams.get('limit')) || 20;
+        const all = searchParams.get('all') === 'true'; // For admin panel or other uses
+
+        // If 'all' is true, return all beats without pagination (backwards compatibility)
+        if (all) {
+            const beats = await prisma.beat.findMany({
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    licenses: {
+                        include: { license: true }
+                    }
+                }
+            });
+            return NextResponse.json(beats);
+        }
+
+        // Get total count for pagination info
+        const total = await prisma.beat.count();
+        const totalPages = Math.ceil(total / limit);
+        const skip = (page - 1) * limit;
+
         const beats = await prisma.beat.findMany({
             orderBy: { createdAt: 'desc' },
             include: {
                 licenses: {
                     include: { license: true }
                 }
+            },
+            skip,
+            take: limit
+        });
+
+        return NextResponse.json({
+            beats,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages
             }
         });
-        return NextResponse.json(beats);
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch beats" }, { status: 500 });
     }

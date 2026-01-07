@@ -107,7 +107,7 @@ function BeatDetailsContent() {
                     // Let's assume id 1 might be real now, or if it was dummy only, we just rely on fetch.
                 }
 
-                const res = await fetch("/api/beats");
+                const res = await fetch("/api/beats?all=true");
                 if (res.ok) {
                     const data = await res.json();
                     const found = data.find(b => b.id == id);

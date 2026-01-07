@@ -1897,3 +1897,131 @@
 :global([data-theme="light"]) .addToCartBtn:hover {
   background: #0052a3 !important;
 }
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.pageBtn {
+  background: transparent;
+  border: 1px solid var(--neon-blue);
+  color: var(--neon-blue);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: var(--neon-blue);
+  color: #000;
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
+}
+
+.pageBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pageNum {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #888;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.pageNum:hover {
+  border-color: var(--neon-purple);
+  color: var(--neon-purple);
+}
+
+.pageNumActive {
+  background: var(--neon-purple);
+  border-color: var(--neon-purple);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(217, 70, 239, 0.5);
+}
+
+/* Light mode pagination */
+:global([data-theme="light"]) .pagination {
+  background: #ffffff !important;
+  border-color: #e0e0e0 !important;
+}
+
+:global([data-theme="light"]) .pageBtn {
+  border-color: #0066cc !important;
+  color: #0066cc !important;
+}
+
+:global([data-theme="light"]) .pageBtn:hover:not(:disabled) {
+  background: #0066cc !important;
+  color: #ffffff !important;
+}
+
+:global([data-theme="light"]) .pageNum {
+  border-color: #d0d0d0 !important;
+  color: #5a5a6e !important;
+}
+
+:global([data-theme="light"]) .pageNum:hover {
+  border-color: #9333ea !important;
+  color: #9333ea !important;
+}
+
+:global([data-theme="light"]) .pageNumActive {
+  background: #9333ea !important;
+  border-color: #9333ea !important;
+  color: #ffffff !important;
+}
+
+/* Mobile responsiveness for pagination */
+@media (max-width: 768px) {
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .pageBtn {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  .pageNumbers {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .pageNum {
+    width: 35px;
+    height: 35px;
+    font-size: 0.8rem;
+  }
+}
